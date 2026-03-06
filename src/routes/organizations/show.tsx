@@ -44,7 +44,7 @@ export function OrganizationShowPage() {
           <Link
             to="/organizations/$id/edit"
             params={{ id }}
-            className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+            className="border border-primary/30 rounded-lg px-3 py-1.5 text-sm font-medium text-primary hover:bg-primary/5"
           >
             Edit
           </Link>

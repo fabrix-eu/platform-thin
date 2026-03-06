@@ -11,10 +11,10 @@ export function RootLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between">
-        <Link to="/" className="text-lg font-bold text-gray-900">
-          mantel-thin
+    <div className="min-h-screen bg-muted/40">
+      <header className="bg-white border-b border-border px-6 py-3 flex items-center justify-between">
+        <Link to="/" className="text-lg font-display font-bold text-primary">
+          Fabrix Platform
         </Link>
         {authed && (
           <nav className="flex items-center gap-4">

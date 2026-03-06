@@ -30,7 +30,7 @@ export function OrganizationsListPage() {
         <h1 className="text-2xl font-bold text-gray-900">Organizations</h1>
         <Link
           to="/organizations/new"
-          className="bg-gray-900 text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-gray-800"
+          className="bg-primary text-primary-foreground rounded-lg px-4 py-2 text-sm font-medium hover:bg-primary/90"
         >
           New Organization
         </Link>
@@ -42,7 +42,7 @@ export function OrganizationsListPage() {
           name="search"
           defaultValue={search || ''}
           placeholder="Search organizations..."
-          className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         />
         <button
           type="submit"

@@ -42,7 +42,7 @@ export function OrganizationForm({
           name="name"
           required
           defaultValue={defaultValues?.name || ''}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         />
         <FieldError mutation={mutation} field="name" />
       </div>
@@ -55,7 +55,7 @@ export function OrganizationForm({
           id="kind"
           name="kind"
           defaultValue={defaultValues?.kind || ''}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         >
           <option value="">Select...</option>
           <option value="brand_retailer">Brand / Retailer</option>
@@ -76,7 +76,7 @@ export function OrganizationForm({
           name="description"
           rows={3}
           defaultValue={defaultValues?.description || ''}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         />
         <FieldError mutation={mutation} field="description" />
       </div>
@@ -90,7 +90,7 @@ export function OrganizationForm({
             id="address"
             name="address"
             defaultValue={defaultValues?.address || ''}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
           />
           <FieldError mutation={mutation} field="address" />
         </div>
@@ -105,7 +105,7 @@ export function OrganizationForm({
             maxLength={2}
             placeholder="FR"
             defaultValue={defaultValues?.country_code || ''}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
           />
           <FieldError mutation={mutation} field="country_code" />
         </div>
@@ -115,7 +115,7 @@ export function OrganizationForm({
         <button
           type="submit"
           disabled={mutation.isPending}
-          className="bg-gray-900 text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-gray-800 disabled:opacity-50"
+          className="bg-primary text-primary-foreground rounded-lg px-4 py-2 text-sm font-medium hover:bg-primary/90 disabled:opacity-50"
         >
           {mutation.isPending ? pendingLabel : submitLabel}
         </button>
