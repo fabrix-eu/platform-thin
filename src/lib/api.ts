@@ -1,4 +1,4 @@
-const BASE = import.meta.env.PROD
+export const BASE = import.meta.env.PROD
   ? 'https://api.fabrixproject.eu'
   : '/api';
 
