@@ -1,5 +1,6 @@
 import { Link, Outlet, useNavigate } from '@tanstack/react-router';
 import { isAuthenticated, logout } from '../lib/auth';
+import { OrgSwitcher } from '../components/OrgSwitcher';
 
 export function RootLayout() {
   const navigate = useNavigate();
@@ -13,9 +14,17 @@ export function RootLayout() {
   return (
     <div className="min-h-screen bg-muted/40">
       <header className="bg-white border-b border-border px-6 py-3 flex items-center justify-between">
-        <Link to="/" className="text-lg font-display font-bold text-primary">
-          Fabrix Platform
-        </Link>
+        <div className="flex items-center gap-4">
+          <Link to="/" className="text-lg font-display font-bold text-primary">
+            Fabrix Platform
+          </Link>
+          {authed && (
+            <>
+              <div className="h-5 w-px bg-border" />
+              <OrgSwitcher />
+            </>
+          )}
+        </div>
         {authed && (
           <nav className="flex items-center gap-4">
             <Link

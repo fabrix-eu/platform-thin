@@ -5,12 +5,33 @@ interface AuthTokens {
   refresh_token: string;
 }
 
-interface User {
+export interface MeOrganization {
+  organization_id: string;
+  organization_name: string;
+  organization_slug: string;
+  organization_kind: string;
+  organization_image_url: string | null;
+  organization_registration_step: number;
+  onboarding_complete: boolean;
+  role: 'owner' | 'admin' | 'member';
+  relations_count: number;
+  assessments_completed: number;
+  assessments_total: number;
+  communities: {
+    community_id: string;
+    community_name: string;
+    community_slug: string;
+    community_image_url: string | null;
+  }[];
+}
+
+export interface User {
   id: string;
   email: string;
-  first_name: string;
-  last_name: string;
+  name: string;
   role: string;
+  image_url: string | null;
+  organizations: MeOrganization[];
 }
 
 export async function login(email: string, password: string): Promise<AuthTokens> {

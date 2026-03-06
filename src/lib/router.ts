@@ -12,6 +12,8 @@ import { OrganizationsListPage } from '../routes/organizations/list';
 import { OrganizationShowPage } from '../routes/organizations/show';
 import { OrganizationNewPage } from '../routes/organizations/new';
 import { OrganizationEditPage } from '../routes/organizations/edit';
+import { OrgLayout } from '../routes/org/layout';
+import { OrgDashboardPage } from '../routes/org/dashboard';
 import { isAuthenticated } from './auth';
 
 // Auth guard
@@ -41,7 +43,7 @@ const indexRoute = createRoute({
   component: HomePage,
 });
 
-// Organizations
+// Organizations (admin list)
 const organizationsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/organizations',
@@ -76,6 +78,20 @@ const organizationEditRoute = createRoute({
   component: OrganizationEditPage,
 });
 
+// Org-scoped routes (/$orgSlug)
+const orgRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/$orgSlug',
+  beforeLoad: requireAuth,
+  component: OrgLayout,
+});
+
+const orgIndexRoute = createRoute({
+  getParentRoute: () => orgRoute,
+  path: '/',
+  component: OrgDashboardPage,
+});
+
 const routeTree = rootRoute.addChildren([
   loginRoute,
   indexRoute,
@@ -84,6 +100,9 @@ const routeTree = rootRoute.addChildren([
     organizationNewRoute,
     organizationShowRoute,
     organizationEditRoute,
+  ]),
+  orgRoute.addChildren([
+    orgIndexRoute,
   ]),
 ]);
 
