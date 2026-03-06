@@ -1,4 +1,6 @@
-const BASE = '/api';
+const BASE = import.meta.env.PROD
+  ? 'https://api.fabrixproject.eu'
+  : '/api';
 
 export class ApiError extends Error {
   status: number;

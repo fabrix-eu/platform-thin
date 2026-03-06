@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <script>
+      // SPA redirect: rewrite path to query string so GitHub Pages serves index.html
+      var path = window.location.pathname;
+      window.location.replace('/' + '?p=' + encodeURIComponent(path) + window.location.search.replace('?', '&') + window.location.hash);
+    </script>
+  </head>
+</html>
