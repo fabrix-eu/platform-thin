@@ -29,6 +29,21 @@ export const ORG_KIND_COLORS: Record<string, string> = {
   other: '#8C9196',
 };
 
+export interface OrganizationCommunity {
+  id: string;
+  name: string;
+  slug: string;
+  image_url: string | null;
+}
+
+export interface OrganizationRelation {
+  id: string;
+  name: string;
+  slug: string;
+  kind: string | null;
+  image_url: string | null;
+}
+
 export interface Organization {
   id: string;
   name: string;
@@ -43,6 +58,18 @@ export interface Organization {
   image_url: string | null;
   claimed: boolean;
   relations_count: number;
+  cover_url?: string | null;
+  website?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  facility_types?: string[];
+  processing_types?: string[];
+  product_types?: string[];
+  nace_code?: string | null;
+  sector?: string | null;
+  communities?: OrganizationCommunity[];
+  relations?: unknown[];
+  related_organizations?: OrganizationRelation[];
 }
 
 interface OrganizationsResponse {
