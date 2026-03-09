@@ -3,10 +3,6 @@ import { Link, useNavigate, useSearch } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { getOrganizations, ORG_KINDS } from '../../lib/organizations';
 import type { Organization } from '../../lib/organizations';
-import { OrganizationsMap } from '../../components/OrganizationsMap';
-import { MapLegend } from '../../components/MapLegend';
-
-const ALL_KINDS = Object.keys(ORG_KINDS);
 
 function OrgAvatar({ org }: { org: Organization }) {
   if (org.image_url) {
@@ -43,6 +39,54 @@ function KindBadge({ kind }: { kind: string | null }) {
   );
 }
 
+function OrgCard({ org }: { org: Organization }) {
+  const kind = org.kind ? ORG_KINDS[org.kind] || ORG_KINDS.other : null;
+
+  return (
+    <Link
+      to="/organizations/$id"
+      params={{ id: org.slug || org.id }}
+      className="block bg-white rounded-lg border border-border hover:border-gray-300 hover:shadow-md transition-all group"
+    >
+      <div className="p-4">
+        <div className="flex items-start gap-3">
+          <OrgAvatar org={org} />
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between">
+              <h3 className="font-display font-semibold text-sm text-gray-900 truncate">
+                {org.name}
+              </h3>
+              <svg className="h-4 w-4 text-gray-400 group-hover:text-gray-600 transition-colors flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+              </svg>
+            </div>
+            <div className="flex items-center gap-2 mt-1">
+              {kind && (
+                <span className={`inline-block text-[10px] px-1.5 py-0 rounded-full ${kind.color}`}>
+                  {kind.label}
+                </span>
+              )}
+              {!org.claimed && (
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-yellow-100 text-yellow-800 uppercase tracking-wide">
+                  Unclaimed
+                </span>
+              )}
+            </div>
+            {org.address && (
+              <p className="text-xs text-muted-foreground mt-2 truncate">
+                {[org.address, org.country_code].filter(Boolean).join(', ')}
+              </p>
+            )}
+            {org.relations_count > 0 && (
+              <p className="text-xs text-muted-foreground mt-1">{org.relations_count} relations</p>
+            )}
+          </div>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
 export function OrganizationsListPage() {
   const navigate = useNavigate();
   const { search, page } = useSearch({ strict: false }) as { search?: string; page?: number };
@@ -62,23 +106,15 @@ export function OrganizationsListPage() {
     });
   };
 
-  const [view, setView] = useState<'list' | 'map'>('list');
-  const [selectedKinds, setSelectedKinds] = useState<string[]>(ALL_KINDS);
+  const [view, setView] = useState<'list' | 'cards'>('list');
   const meta = query.data?.meta;
-
-  // For map view: fetch all orgs (no pagination)
-  const mapQuery = useQuery({
-    queryKey: ['organizations', 'map', { search }],
-    queryFn: () => getOrganizations({ per_page: 1000, search }),
-    enabled: view === 'map',
-  });
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
       {/* Header */}
-      <h1 className="text-2xl font-bold">Organizations</h1>
+      <h1 className="text-2xl font-bold">Directory</h1>
 
-      {/* Search + Add */}
+      {/* Search + View toggle + Add */}
       <form onSubmit={handleSearch} className="flex gap-2">
         <input
           name="search"
@@ -105,18 +141,18 @@ export function OrganizationsListPage() {
           </button>
           <button
             type="button"
-            onClick={() => setView('map')}
-            className={`px-3 py-2 text-sm border-l border-border ${view === 'map' ? 'bg-secondary text-secondary-foreground' : 'text-muted-foreground hover:bg-muted/50'}`}
-            title="Map view"
+            onClick={() => setView('cards')}
+            className={`px-3 py-2 text-sm border-l border-border ${view === 'cards' ? 'bg-secondary text-secondary-foreground' : 'text-muted-foreground hover:bg-muted/50'}`}
+            title="Cards view"
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498 4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 0 0-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0Z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25a2.25 2.25 0 0 1-2.25-2.25v-2.25Z" />
             </svg>
           </button>
         </div>
         <Link
           to="/organizations/new"
-          className="bg-primary text-primary-foreground rounded-lg px-4 py-2 text-sm font-medium hover:bg-primary/90"
+          className="bg-primary text-primary-foreground rounded-lg px-4 py-2 text-sm font-medium hover:bg-primary/90 whitespace-nowrap"
         >
           New Organization
         </Link>
@@ -126,53 +162,66 @@ export function OrganizationsListPage() {
       {query.isLoading && <p className="text-muted-foreground">Loading...</p>}
       {query.error && <p className="text-destructive">Failed to load organizations</p>}
 
-      {query.data && view === 'list' && (
+      {query.data && (
         <>
           <p className="text-sm text-muted-foreground">{meta?.total_count ?? 0} results</p>
 
-          <div className="divide-y divide-border border border-border rounded-lg bg-card">
-            {query.data.organizations.map((org) => (
-              <Link
-                key={org.id}
-                to="/organizations/$id"
-                params={{ id: org.slug || org.id }}
-                className="flex items-center gap-4 px-4 py-3 hover:bg-muted/50 transition-colors"
-              >
-                <OrgAvatar org={org} />
+          {view === 'list' && (
+            <div className="divide-y divide-border border border-border rounded-lg bg-card">
+              {query.data.organizations.map((org) => (
+                <Link
+                  key={org.id}
+                  to="/organizations/$id"
+                  params={{ id: org.slug || org.id }}
+                  className="flex items-center gap-4 px-4 py-3 hover:bg-muted/50 transition-colors"
+                >
+                  <OrgAvatar org={org} />
 
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="font-medium text-foreground truncate">{org.name}</p>
-                    {!org.claimed && (
-                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-yellow-100 text-yellow-800 uppercase tracking-wide">
-                        Unclaimed
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium text-foreground truncate">{org.name}</p>
+                      {!org.claimed && (
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-yellow-100 text-yellow-800 uppercase tracking-wide">
+                          Unclaimed
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 mt-1">
+                      <KindBadge kind={org.kind} />
+                      {org.address && (
+                        <span className="text-xs text-muted-foreground truncate">
+                          {[org.address, org.country_code].filter(Boolean).join(', ')}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3 shrink-0">
+                    {org.relations_count > 0 && (
+                      <span className="text-xs text-muted-foreground">
+                        {org.relations_count} rel.
                       </span>
                     )}
+                    <span className="text-muted-foreground">→</span>
                   </div>
-                  <div className="flex items-center gap-2 mt-1">
-                    <KindBadge kind={org.kind} />
-                    {org.address && (
-                      <span className="text-xs text-muted-foreground truncate">
-                        {[org.address, org.country_code].filter(Boolean).join(', ')}
-                      </span>
-                    )}
-                  </div>
-                </div>
+                </Link>
+              ))}
+              {query.data.organizations.length === 0 && (
+                <p className="px-4 py-8 text-center text-muted-foreground">No organizations found</p>
+              )}
+            </div>
+          )}
 
-                <div className="flex items-center gap-3 shrink-0">
-                  {org.relations_count > 0 && (
-                    <span className="text-xs text-muted-foreground">
-                      {org.relations_count} rel.
-                    </span>
-                  )}
-                  <span className="text-muted-foreground">→</span>
-                </div>
-              </Link>
-            ))}
-            {query.data.organizations.length === 0 && (
-              <p className="px-4 py-8 text-center text-muted-foreground">No organizations found</p>
-            )}
-          </div>
+          {view === 'cards' && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {query.data.organizations.map((org) => (
+                <OrgCard key={org.id} org={org} />
+              ))}
+              {query.data.organizations.length === 0 && (
+                <p className="text-center text-muted-foreground col-span-2">No organizations found</p>
+              )}
+            </div>
+          )}
 
           {/* Pagination */}
           {meta && meta.total_pages > 1 && (
@@ -201,26 +250,6 @@ export function OrganizationsListPage() {
             </div>
           )}
         </>
-      )}
-
-      {view === 'map' && (
-        <div className="relative border border-border rounded-lg overflow-hidden">
-          {mapQuery.isLoading && (
-            <div className="flex items-center justify-center h-[500px] text-muted-foreground">
-              Loading map...
-            </div>
-          )}
-          {mapQuery.data && (
-            <>
-              <MapLegend selectedKinds={selectedKinds} onKindsChange={setSelectedKinds} />
-              <OrganizationsMap
-                organizations={mapQuery.data.organizations}
-                selectedKinds={selectedKinds}
-                height="500px"
-              />
-            </>
-          )}
-        </div>
       )}
     </div>
   );

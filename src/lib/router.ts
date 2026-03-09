@@ -14,6 +14,8 @@ import { OrganizationNewPage } from '../routes/organizations/new';
 import { OrganizationEditPage } from '../routes/organizations/edit';
 import { OrgLayout } from '../routes/org/layout';
 import { OrgDashboardPage } from '../routes/org/dashboard';
+import { MapPage } from '../routes/map';
+import { CommunitiesPage } from '../routes/communities';
 import { isAuthenticated } from './auth';
 
 // Auth guard
@@ -78,6 +80,22 @@ const organizationEditRoute = createRoute({
   component: OrganizationEditPage,
 });
 
+// Map
+const mapRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/map',
+  beforeLoad: requireAuth,
+  component: MapPage,
+});
+
+// Communities
+const communitiesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/communities',
+  beforeLoad: requireAuth,
+  component: CommunitiesPage,
+});
+
 // Org-scoped routes (/$orgSlug)
 const orgRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -101,6 +119,8 @@ const routeTree = rootRoute.addChildren([
     organizationShowRoute,
     organizationEditRoute,
   ]),
+  mapRoute,
+  communitiesRoute,
   orgRoute.addChildren([
     orgIndexRoute,
   ]),
