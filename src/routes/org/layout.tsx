@@ -1,124 +1,128 @@
 import { Link, Outlet, useParams, useMatch } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
-import { getOrganization, ORG_KINDS } from '../../lib/organizations';
+import { getMe } from '../../lib/auth';
 
 interface SidebarItem {
+  key: string;
   label: string;
   href: string;
-  disabled?: boolean;
-}
-
-function OrgAvatar({ name, imageUrl }: { name: string; imageUrl: string | null }) {
-  const initials = name
-    .split(' ')
-    .map((w) => w[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
-
-  if (imageUrl) {
-    return (
-      <img
-        src={imageUrl}
-        alt={name}
-        className="h-10 w-10 rounded-full object-cover"
-      />
-    );
-  }
-
-  return (
-    <div className="h-10 w-10 rounded-full bg-primary/10 text-primary flex items-center justify-center text-sm font-semibold">
-      {initials}
-    </div>
-  );
 }
 
 export function OrgLayout() {
   const { orgSlug } = useParams({ strict: false }) as { orgSlug: string };
 
-  const org = useQuery({
-    queryKey: ['organizations', orgSlug],
-    queryFn: () => getOrganization(orgSlug),
-  });
+  const me = useQuery({ queryKey: ['me'], queryFn: getMe });
 
-  // Check if we're on the index route (exact match /$orgSlug)
-  const isIndex = useMatch({ from: '/$orgSlug/', shouldThrow: false });
+  const userOrg = me.data?.organizations.find(
+    (o) => o.organization_slug === orgSlug
+  );
+  const communities = userOrg?.communities ?? [];
+
+  // Active route detection
+  const isDashboard = useMatch({ from: '/$orgSlug/dashboard', shouldThrow: false });
+  const isProfile = useMatch({ from: '/$orgSlug/profile', shouldThrow: false });
+  const isRelations = useMatch({ from: '/$orgSlug/relations', shouldThrow: false });
+  const isAssessments = useMatch({ from: '/$orgSlug/assessments', shouldThrow: false });
+  const isCommunities = useMatch({ from: '/$orgSlug/communities', shouldThrow: false });
+  const isSettings = useMatch({ from: '/$orgSlug/settings', shouldThrow: false });
 
   const navItems: SidebarItem[] = [
-    { label: 'Overview', href: `/${orgSlug}` },
-    { label: 'Profile', href: `/${orgSlug}/profile`, disabled: true },
-    { label: 'Relations', href: `/${orgSlug}/relations`, disabled: true },
-    { label: 'Assessments', href: `/${orgSlug}/assessments`, disabled: true },
-    { label: 'Settings', href: `/${orgSlug}/settings`, disabled: true },
+    { key: 'dashboard', label: 'Dashboard', href: `/${orgSlug}/dashboard` },
+    { key: 'profile', label: 'Profile', href: `/${orgSlug}/profile` },
+    { key: 'relations', label: 'Relations', href: `/${orgSlug}/relations` },
+    { key: 'assessments', label: 'Assessments', href: `/${orgSlug}/assessments` },
+    { key: 'communities', label: 'Communities', href: `/${orgSlug}/communities` },
+    { key: 'settings', label: 'Settings', href: `/${orgSlug}/settings` },
   ];
 
-  const kind = org.data?.kind ? ORG_KINDS[org.data.kind] : null;
+  const activeMap: Record<string, boolean> = {
+    dashboard: !!isDashboard,
+    profile: !!isProfile,
+    relations: !!isRelations,
+    assessments: !!isAssessments,
+    communities: !!isCommunities,
+    settings: !!isSettings,
+  };
 
   return (
-    <div className="flex min-h-[calc(100vh-57px)]">
+    <div className="flex min-h-[calc(100vh-56px)]">
       {/* Sidebar */}
-      <aside className="w-64 border-r border-border bg-white flex-shrink-0">
-        {/* Org header */}
-        <div className="p-4 border-b border-border">
-          {org.isLoading ? (
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-gray-200 animate-pulse" />
-              <div className="flex-1">
-                <div className="h-4 w-24 bg-gray-200 rounded animate-pulse" />
-                <div className="h-3 w-16 bg-gray-100 rounded animate-pulse mt-1" />
-              </div>
-            </div>
-          ) : org.data ? (
-            <div className="flex items-center gap-3">
-              <OrgAvatar name={org.data.name} imageUrl={org.data.image_url} />
-              <div className="flex-1 min-w-0">
-                <h3 className="font-display font-semibold text-sm truncate">
-                  {org.data.name}
-                </h3>
-                {kind && (
-                  <span className={`inline-block text-[10px] px-1.5 py-0 rounded-full mt-0.5 ${kind.color}`}>
-                    {kind.label}
-                  </span>
-                )}
-              </div>
-            </div>
-          ) : null}
-        </div>
-
-        {/* Nav */}
-        <nav className="p-2">
+      <aside className="w-64 border-r border-border bg-white flex-shrink-0 flex flex-col">
+        {/* Main Nav */}
+        <nav className="p-2 flex-1">
           <ul className="space-y-0.5">
-            {navItems.map((item) => {
-              const isActive = item.label === 'Overview' ? !!isIndex : false;
-
-              if (item.disabled) {
-                return (
-                  <li key={item.label}>
-                    <span className="flex items-center justify-between px-3 py-2 text-sm text-gray-400 rounded-md cursor-not-allowed">
-                      {item.label}
-                      <span className="text-[10px] text-gray-300">Soon</span>
-                    </span>
-                  </li>
-                );
-              }
-
-              return (
-                <li key={item.label}>
-                  <Link
-                    to={item.href}
-                    className={`block px-3 py-2 text-sm rounded-md transition-colors ${
-                      isActive
-                        ? 'bg-gray-100 text-gray-900 font-medium'
-                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                    }`}
-                  >
-                    {item.label}
-                  </Link>
-                </li>
-              );
-            })}
+            {navItems.map((item) => (
+              <li key={item.key}>
+                <Link
+                  to={item.href}
+                  className={`block px-3 py-2 text-sm rounded-md transition-colors ${
+                    activeMap[item.key]
+                      ? 'bg-gray-100 text-gray-900 font-medium'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              </li>
+            ))}
           </ul>
+
+          {/* Communities section */}
+          {communities.length > 0 && (
+            <div className="mt-4 pt-4 border-t border-border">
+              <div className="px-3 mb-2 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
+                Communities
+              </div>
+              <ul className="space-y-0.5">
+                {communities.map((c) => {
+                  const initials = c.community_name
+                    .split(' ')
+                    .map((w) => w[0])
+                    .join('')
+                    .slice(0, 2)
+                    .toUpperCase();
+
+                  return (
+                    <li key={c.community_id}>
+                      <Link
+                        to="/$orgSlug/communities/$communitySlug"
+                        params={{ orgSlug, communitySlug: c.community_slug }}
+                        className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 rounded-md hover:bg-gray-50 hover:text-gray-900 transition-colors"
+                        activeProps={{ className: 'flex items-center gap-2 px-3 py-2 text-sm rounded-md bg-blue-50 text-blue-700 font-medium' }}
+                      >
+                        {c.community_image_url ? (
+                          <img
+                            src={c.community_image_url}
+                            alt={c.community_name}
+                            className="h-5 w-5 rounded object-cover flex-shrink-0"
+                          />
+                        ) : (
+                          <div className="h-5 w-5 rounded bg-blue-100 text-blue-600 flex items-center justify-center text-[8px] font-semibold flex-shrink-0">
+                            {initials}
+                          </div>
+                        )}
+                        <span className="truncate">{c.community_name}</span>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          )}
         </nav>
+
+        {/* Back to directory */}
+        <div className="p-2 border-t border-border">
+          <Link
+            to="/organizations"
+            className="flex items-center gap-2 px-3 py-2 text-sm text-gray-500 rounded-md hover:bg-gray-50 hover:text-gray-700 transition-colors"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+            </svg>
+            Directory
+          </Link>
+        </div>
       </aside>
 
       {/* Content */}

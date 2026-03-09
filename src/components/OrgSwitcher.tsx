@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Link, useParams } from '@tanstack/react-router';
+import { Link, useParams, useRouter } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { getMe, type MeOrganization } from '../lib/auth';
 import { ORG_KINDS } from '../lib/organizations';
@@ -29,10 +29,40 @@ function OrgAvatar({ org }: { org: MeOrganization }) {
   );
 }
 
+/**
+ * Compute the destination when switching org, based on current context:
+ * - Shell A: go to /$newSlug/dashboard
+ * - Shell B (/$orgSlug/profile): preserve section → /$newSlug/profile
+ * - Shell C (/$orgSlug/communities/$c/...): don't preserve community → /$newSlug/communities
+ */
+function getOrgSwitchPath(
+  currentSlug: string | undefined,
+  newSlug: string,
+  pathname: string
+): string {
+  if (!currentSlug) {
+    // In Shell A (no org context) → go to dashboard
+    return `/${newSlug}/dashboard`;
+  }
+
+  // Check if in Shell C (community context)
+  const communityMatch = pathname.match(
+    new RegExp(`^/${currentSlug}/communities/[^/]+`)
+  );
+  if (communityMatch) {
+    // Don't preserve community (other org may not be in it)
+    return `/${newSlug}/communities`;
+  }
+
+  // Shell B: preserve the current section
+  return pathname.replace(`/${currentSlug}`, `/${newSlug}`);
+}
+
 export function OrgSwitcher() {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const params = useParams({ strict: false });
+  const router = useRouter();
   const orgSlug = (params as Record<string, string | undefined>).orgSlug;
 
   const me = useQuery({ queryKey: ['me'], queryFn: getMe });
@@ -54,6 +84,13 @@ export function OrgSwitcher() {
   }, [open]);
 
   if (organizations.length === 0) return null;
+
+  const handleOrgClick = (org: MeOrganization) => {
+    setOpen(false);
+    const pathname = router.state.location.pathname;
+    const dest = getOrgSwitchPath(orgSlug, org.organization_slug, pathname);
+    router.navigate({ to: dest });
+  };
 
   return (
     <div ref={ref} className="relative">
@@ -90,12 +127,11 @@ export function OrgSwitcher() {
             {organizations.map((org) => {
               const kind = org.organization_kind ? ORG_KINDS[org.organization_kind] : null;
               return (
-                <Link
+                <button
                   key={org.organization_id}
-                  to="/$orgSlug"
-                  params={{ orgSlug: org.organization_slug }}
-                  onClick={() => setOpen(false)}
-                  className={`flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-gray-50 transition-colors ${
+                  type="button"
+                  onClick={() => handleOrgClick(org)}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-gray-50 transition-colors text-left ${
                     org.organization_slug === orgSlug ? 'bg-gray-50 font-medium' : 'text-gray-700'
                   }`}
                 >
@@ -108,7 +144,7 @@ export function OrgSwitcher() {
                       </span>
                     )}
                   </div>
-                </Link>
+                </button>
               );
             })}
           </div>

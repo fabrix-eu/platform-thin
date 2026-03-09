@@ -14,7 +14,7 @@ function OrgCard({ org }: { org: MeOrganization }) {
 
   return (
     <Link
-      to="/$orgSlug"
+      to="/$orgSlug/dashboard"
       params={{ orgSlug: org.organization_slug }}
       className="block bg-white rounded-lg border border-border hover:border-gray-300 hover:shadow-md transition-all group"
     >
@@ -48,6 +48,7 @@ function OrgCard({ org }: { org: MeOrganization }) {
             <div className="flex items-center gap-4 mt-3 text-xs text-gray-500">
               <span>{org.relations_count} relations</span>
               <span>{org.assessments_completed}/{org.assessments_total} assessments</span>
+              <span>{org.communities.length} communities</span>
             </div>
           </div>
         </div>
@@ -72,6 +73,7 @@ export function HomePage() {
 
   const user = me.data!;
   const orgs = user.organizations ?? [];
+  const isViewer = orgs.length === 0;
 
   return (
     <div className="max-w-3xl mx-auto p-6 mt-4">
@@ -80,7 +82,9 @@ export function HomePage() {
           Welcome, {user.name}
         </h1>
         <p className="text-sm text-gray-500 mt-1">
-          Select an organization to view its dashboard.
+          {isViewer
+            ? 'Explore the directory and map to discover organizations.'
+            : 'Select an organization to view its dashboard.'}
         </p>
       </div>
 
@@ -91,7 +95,28 @@ export function HomePage() {
           ))}
         </div>
       ) : (
-        <p className="text-gray-500">You don&apos;t have any organizations yet.</p>
+        <div className="bg-white rounded-lg border border-border p-8 text-center">
+          <div className="max-w-sm mx-auto">
+            <svg className="h-12 w-12 text-gray-300 mx-auto mb-4" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21" />
+            </svg>
+            <h3 className="font-display font-semibold text-gray-900 mb-2">
+              Add your organization
+            </h3>
+            <p className="text-sm text-gray-500 mb-4">
+              Search for your organization in our directory or create a new one to get started.
+            </p>
+            <Link
+              to="/organizations/new"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-medium rounded-md hover:bg-primary/90 transition-colors"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
+              Add Organization
+            </Link>
+          </div>
+        </div>
       )}
     </div>
   );
