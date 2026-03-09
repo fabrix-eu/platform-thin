@@ -121,3 +121,23 @@ export async function updateOrganization(id: string, data: Record<string, unknow
 export async function deleteOrganization(id: string): Promise<void> {
   return api.delete(`/organizations/${id}`);
 }
+
+export interface OrganizationBasic {
+  id: string;
+  name: string;
+  kind: string;
+  address: string;
+  image_url: string | null;
+  lon: number;
+  lat: number;
+}
+
+export async function searchOrganizations(q: string): Promise<OrganizationBasic[]> {
+  return api.get<OrganizationBasic[]>(`/organizations/search?q=${encodeURIComponent(q)}`);
+}
+
+export async function submitClaim(organizationId: string, justification: string): Promise<void> {
+  await api.post(`/organizations/${organizationId}/claims`, {
+    claim: { justification },
+  });
+}
