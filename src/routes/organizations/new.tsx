@@ -100,9 +100,9 @@ function SearchStep({
               >
                 {/* Avatar */}
                 {org.image_url ? (
-                  <img src={org.image_url} alt="" className="h-10 w-10 rounded-full object-cover flex-shrink-0" />
+                  <img src={org.image_url} alt="" className="h-10 w-10 rounded-full object-cover shrink-0" />
                 ) : (
-                  <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center text-xs font-medium text-gray-600 flex-shrink-0">
+                  <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center text-xs font-medium text-gray-600 shrink-0">
                     {getInitials(org.name)}
                   </div>
                 )}
@@ -112,7 +112,7 @@ function SearchStep({
                     <p className="text-xs text-gray-500 truncate">{org.address}</p>
                   )}
                 </div>
-                <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full flex-shrink-0 ${kindInfo.color}`}>
+                <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full shrink-0 ${kindInfo.color}`}>
                   {kindInfo.label}
                 </span>
               </button>
@@ -209,9 +209,9 @@ function ClaimStep({
       {/* Org card */}
       <div className="flex items-start gap-4 p-4 rounded-lg border border-gray-200">
         {org.image_url ? (
-          <img src={org.image_url} alt="" className="h-14 w-14 rounded-full object-cover flex-shrink-0" />
+          <img src={org.image_url} alt="" className="h-14 w-14 rounded-full object-cover shrink-0" />
         ) : (
-          <div className="h-14 w-14 rounded-full bg-gray-200 flex items-center justify-center text-sm font-medium text-gray-600 flex-shrink-0">
+          <div className="h-14 w-14 rounded-full bg-gray-200 flex items-center justify-center text-sm font-medium text-gray-600 shrink-0">
             {getInitials(org.name)}
           </div>
         )}
