@@ -130,6 +130,7 @@ export interface OrganizationBasic {
   image_url: string | null;
   lon: number;
   lat: number;
+  claimed: boolean;
 }
 
 export async function searchOrganizations(q: string): Promise<OrganizationBasic[]> {

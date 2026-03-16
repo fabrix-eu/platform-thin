@@ -20,7 +20,6 @@ interface Props {
   label?: string;
   initialAddress?: string;
   initialLocation?: AddressData | null;
-  showMap?: boolean;
 }
 
 interface AddressSuggestion {
@@ -30,13 +29,36 @@ interface AddressSuggestion {
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+function PinIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+      />
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+      />
+    </svg>
+  );
+}
+
 export function GoogleAddressAutocomplete({
   onSelect,
   placeholder = 'Start typing at least 3 characters...',
   label = 'Address',
   initialAddress = '',
   initialLocation = null,
-  showMap = true,
 }: Props) {
   const [address, setAddress] = useState(
     initialLocation?.address || initialAddress
@@ -45,20 +67,13 @@ export function GoogleAddressAutocomplete({
     useState<AddressData | null>(initialLocation);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
-  const [justSelected, setJustSelected] = useState(false);
+  const justSelectedRef = useRef(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
-  const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<any>(null);
-  const markerRef = useRef<any>(null);
   const autocompleteServiceRef = useRef<any>(null);
   const placesServiceRef = useRef<any>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
-
-  const shouldShowMap =
-    showMap && selectedLocation && selectedLocation.lat && selectedLocation.lon;
 
   // Load Google Maps
   useEffect(() => {
@@ -90,75 +105,14 @@ export function GoogleAddressAutocomplete({
     }
   }, [mapLoaded]);
 
-  // Initialize map
-  useEffect(() => {
-    if (
-      mapLoaded &&
-      mapRef.current &&
-      shouldShowMap &&
-      !mapInstanceRef.current
-    ) {
-      const location = {
-        lat: selectedLocation.lat,
-        lng: selectedLocation.lon,
-      };
-
-      mapInstanceRef.current = new window.google.maps.Map(mapRef.current, {
-        zoom: 15,
-        center: location,
-        mapTypeControl: false,
-        streetViewControl: false,
-        fullscreenControl: false,
-        zoomControl: true,
-        scrollwheel: false,
-        disableDoubleClickZoom: true,
-      });
-
-      markerRef.current = new window.google.maps.Marker({
-        position: location,
-        map: mapInstanceRef.current,
-        title: selectedLocation.address,
-        draggable: true,
-      });
-
-      markerRef.current.addListener('dragend', (event: any) => {
-        const newLat = event.latLng.lat();
-        const newLng = event.latLng.lng();
-        const geocoder = new window.google.maps.Geocoder();
-        geocoder.geocode(
-          { location: { lat: newLat, lng: newLng } },
-          (results: any, status: any) => {
-            if (status === 'OK' && results[0]) {
-              const place = results[0];
-              const data = extractAddressData(place, newLat, newLng);
-              setJustSelected(true);
-              setSelectedLocation(data);
-              setAddress(place.formatted_address);
-              onSelect(data);
-            }
-          }
-        );
-      });
-    }
-  }, [mapLoaded, shouldShowMap, selectedLocation, onSelect]);
-
-  // Reset map when hidden
-  useEffect(() => {
-    if (!shouldShowMap && mapInstanceRef.current) {
-      mapInstanceRef.current = null;
-      markerRef.current = null;
-    }
-  }, [shouldShowMap]);
-
   // Debounced search
   useEffect(() => {
-    if (justSelected) {
-      setJustSelected(false);
+    if (justSelectedRef.current) {
+      justSelectedRef.current = false;
       return;
     }
     if (!address || address.length < 3 || !autocompleteServiceRef.current) {
       setSuggestions([]);
-      setShowSuggestions(false);
       return;
     }
     const timeout = setTimeout(() => {
@@ -176,17 +130,15 @@ export function GoogleAddressAutocomplete({
                 description: p.description,
               }))
             );
-            setShowSuggestions(true);
             setSelectedIndex(-1);
           } else {
             setSuggestions([]);
-            setShowSuggestions(false);
           }
         }
       );
     }, 300);
     return () => clearTimeout(timeout);
-  }, [address, justSelected]);
+  }, [address]);
 
   // Click outside
   useEffect(() => {
@@ -197,7 +149,7 @@ export function GoogleAddressAutocomplete({
         inputRef.current &&
         !inputRef.current.contains(e.target as Node)
       ) {
-        setShowSuggestions(false);
+        setSuggestions([]);
       }
     };
     document.addEventListener('mousedown', handler);
@@ -220,17 +172,11 @@ export function GoogleAddressAutocomplete({
             if (lat === undefined || lng === undefined) return;
 
             const data = extractAddressData(place, lat, lng);
-            setJustSelected(true);
+            justSelectedRef.current = true;
             setSelectedLocation(data);
             setAddress(place.formatted_address || description);
             onSelect(data);
-            setShowSuggestions(false);
             setSuggestions([]);
-
-            if (mapInstanceRef.current) {
-              mapInstanceRef.current = null;
-              markerRef.current = null;
-            }
           }
         }
       );
@@ -239,7 +185,7 @@ export function GoogleAddressAutocomplete({
   );
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (!showSuggestions || suggestions.length === 0) return;
+    if (suggestions.length === 0) return;
     switch (e.key) {
       case 'ArrowDown':
         e.preventDefault();
@@ -259,7 +205,7 @@ export function GoogleAddressAutocomplete({
         }
         break;
       case 'Escape':
-        setShowSuggestions(false);
+        setSuggestions([]);
         break;
     }
   };
@@ -285,7 +231,7 @@ export function GoogleAddressAutocomplete({
             if (selectedLocation && value !== selectedLocation.address) {
               setSelectedLocation(null);
             }
-            // Fallback: when Google Maps is not loaded, emit raw address text
+            // Fallback: when Google Maps is not loaded, emit raw address
             if (!mapLoaded && value.length >= 3) {
               onSelect({
                 address: value,
@@ -295,19 +241,13 @@ export function GoogleAddressAutocomplete({
               });
             }
           }}
-          onFocus={() => {
-            if (!selectedLocation && suggestions.length > 0) {
-              setShowSuggestions(true);
-            }
-          }}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
           autoComplete="off"
           className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         />
 
-        {/* Suggestions dropdown */}
-        {showSuggestions && suggestions.length > 0 && (
+        {suggestions.length > 0 && (
           <div
             ref={dropdownRef}
             className="absolute top-full left-0 right-0 z-50 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto mt-1"
@@ -322,25 +262,7 @@ export function GoogleAddressAutocomplete({
                 onClick={() => handlePlaceSelect(s.place_id, s.description)}
                 onMouseEnter={() => setSelectedIndex(i)}
               >
-                <svg
-                  className="h-4 w-4 text-gray-400 shrink-0"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                  />
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                  />
-                </svg>
+                <PinIcon className="h-4 w-4 text-gray-400 shrink-0" />
                 {s.description}
               </button>
             ))}
@@ -348,28 +270,9 @@ export function GoogleAddressAutocomplete({
         )}
       </div>
 
-      {/* Selected location confirmation */}
       {selectedLocation && (
         <div className="flex items-start gap-2 text-sm text-green-700 bg-green-50 p-3 rounded border border-green-200">
-          <svg
-            className="h-4 w-4 mt-0.5 shrink-0"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-            />
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-            />
-          </svg>
+          <PinIcon className="h-4 w-4 mt-0.5 shrink-0" />
           <div>
             <div className="font-medium">Selected location:</div>
             <div className="text-green-600">{selectedLocation.address}</div>
@@ -380,15 +283,6 @@ export function GoogleAddressAutocomplete({
             )}
           </div>
         </div>
-      )}
-
-      {/* Mini map */}
-      {shouldShowMap && (
-        <div
-          ref={mapRef}
-          className="w-full h-48 bg-gray-100 rounded-md border border-gray-200"
-          style={{ minHeight: '192px' }}
-        />
       )}
     </div>
   );

@@ -33,6 +33,7 @@ import { RegisterPage } from '../routes/register';
 import { RegisterWithOrgPage } from '../routes/register-with-org';
 import { VerifyInstructionsPage } from '../routes/verify-instructions';
 import { VerifyEmailPage } from '../routes/verify-email';
+import { TestGoogleAddressPage } from '../routes/test/google-address';
 import { isAuthenticated, type User } from './auth';
 import { queryClient } from './queryClient';
 
@@ -129,6 +130,14 @@ const verifyEmailRoute = createRoute({
   path: '/verify-email',
   validateSearch: z.object({ token: z.string().optional() }),
   component: VerifyEmailPage,
+});
+
+// ── Test pages (dev only) ────────────────────────────────────
+
+const testGoogleAddressRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/test/google-address',
+  component: TestGoogleAddressPage,
 });
 
 // ── Shell A: Explorer ────────────────────────────────────────
@@ -298,6 +307,7 @@ const routeTree = rootRoute.addChildren([
   verifyEmailRoute,
   forgotPasswordRoute,
   resetPasswordRoute,
+  testGoogleAddressRoute,
   indexRoute,
   organizationsRoute.addChildren([
     organizationsIndexRoute,

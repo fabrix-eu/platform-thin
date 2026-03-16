@@ -12,6 +12,9 @@ import {
 
 type Step = 'search' | 'org' | 'account';
 
+// 'create' = new org, 'claim' = existing unclaimed org
+type Mode = 'create' | 'claim';
+
 interface OrgData {
   name: string;
   kind: string;
@@ -32,17 +35,18 @@ function getInitials(name: string): string {
 
 // ─── Step indicator ──────────────────────────────────────────────────────────
 
+const STEPS: { key: Step; label: string }[] = [
+  { key: 'search', label: 'Select' },
+  { key: 'org', label: 'Information' },
+  { key: 'account', label: 'Profile' },
+];
+
 function StepIndicator({ current }: { current: Step }) {
-  const steps: { key: Step; label: string }[] = [
-    { key: 'search', label: 'Find' },
-    { key: 'org', label: 'Organization' },
-    { key: 'account', label: 'Account' },
-  ];
-  const currentIndex = steps.findIndex((s) => s.key === current);
+  const currentIndex = STEPS.findIndex((s) => s.key === current);
 
   return (
     <div className="flex items-center justify-center gap-2 mb-6">
-      {steps.map((s, i) => (
+      {STEPS.map((s, i) => (
         <div key={s.key} className="flex items-center gap-2">
           <div
             className={`flex items-center justify-center h-6 w-6 rounded-full text-xs font-medium ${
@@ -60,7 +64,7 @@ function StepIndicator({ current }: { current: Step }) {
           >
             {s.label}
           </span>
-          {i < steps.length - 1 && (
+          {i < STEPS.length - 1 && (
             <div
               className={`w-8 h-px ${
                 i < currentIndex ? 'bg-primary' : 'bg-gray-200'
@@ -73,18 +77,23 @@ function StepIndicator({ current }: { current: Step }) {
   );
 }
 
-// ─── Step 1: Search ──────────────────────────────────────────────────────────
+// ─── Step 1: Search & Select ────────────────────────────────────────────────
 
 function SearchStep({
   onCreateNew,
+  onClaimOrg,
 }: {
   onCreateNew: (query: string) => void;
+  onClaimOrg: (org: OrganizationBasic) => void;
 }) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<OrganizationBasic[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
-  const [selectedOrg, setSelectedOrg] = useState<OrganizationBasic | null>(null);
+  const [selectedOrg, setSelectedOrg] = useState<OrganizationBasic | null>(
+    null
+  );
+  const [confirmed, setConfirmed] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const doSearch = useCallback(async (q: string) => {
@@ -108,6 +117,7 @@ function SearchStep({
   const handleChange = (value: string) => {
     setQuery(value);
     setSelectedOrg(null);
+    setConfirmed(false);
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => doSearch(value), 300);
   };
@@ -119,8 +129,15 @@ function SearchStep({
     []
   );
 
+  const handleSelectOrg = (org: OrganizationBasic) => {
+    setSelectedOrg(org);
+    setConfirmed(false);
+  };
+
+  const trimmedQuery = query.trim();
+
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       {/* Search input */}
       <div className="relative">
         <svg
@@ -140,7 +157,7 @@ function SearchStep({
           type="text"
           value={query}
           onChange={(e) => handleChange(e.target.value)}
-          placeholder="Search by company name..."
+          placeholder="Type your organization name..."
           autoFocus
           className="w-full border border-gray-300 rounded-lg pl-10 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         />
@@ -148,23 +165,52 @@ function SearchStep({
 
       {/* Loading */}
       {isSearching && (
-        <p className="text-center text-sm text-gray-400 py-6">Searching...</p>
+        <p className="text-center text-sm text-gray-400 py-4">Searching...</p>
       )}
 
-      {/* Results */}
-      {!isSearching && results.length > 0 && (
+      {/* Results list */}
+      {!isSearching && hasSearched && !selectedOrg && (
         <div className="space-y-1">
+          {/* Create new — always first */}
+          {trimmedQuery.length >= 2 && (
+            <button
+              onClick={() => onCreateNew(trimmedQuery)}
+              className="w-full flex items-center gap-3 p-3 rounded-lg border border-dashed border-gray-300 hover:bg-gray-50 transition-colors text-left"
+            >
+              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                <svg
+                  className="h-5 w-5 text-primary"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 4v16m8-8H4"
+                  />
+                </svg>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-sm text-primary">
+                  Create &ldquo;{trimmedQuery}&rdquo;
+                </p>
+                <p className="text-xs text-gray-500">
+                  Register a new organization
+                </p>
+              </div>
+            </button>
+          )}
+
+          {/* Existing orgs */}
           {results.map((org) => {
             const kindInfo = ORG_KINDS[org.kind] || ORG_KINDS.other;
             return (
               <button
                 key={org.id}
-                onClick={() => setSelectedOrg(org)}
-                className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-colors text-left ${
-                  selectedOrg?.id === org.id
-                    ? 'border-primary bg-primary/5'
-                    : 'border-gray-200 hover:bg-gray-50'
-                }`}
+                onClick={() => handleSelectOrg(org)}
+                className="w-full flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors text-left"
               >
                 {org.image_url ? (
                   <img
@@ -196,48 +242,92 @@ function SearchStep({
         </div>
       )}
 
-      {/* Selected org message */}
+      {/* Selected org panel */}
       {selectedOrg && (
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-          <p className="text-sm text-amber-800">
-            <strong>{selectedOrg.name}</strong> already exists. You can claim it
-            after registering your account.
-          </p>
+        <div className="border border-gray-200 rounded-lg p-4 space-y-4">
+          {/* Org info */}
+          <div className="flex items-center gap-3">
+            {selectedOrg.image_url ? (
+              <img
+                src={selectedOrg.image_url}
+                alt=""
+                className="h-12 w-12 rounded-full object-cover shrink-0"
+              />
+            ) : (
+              <div className="h-12 w-12 rounded-full bg-gray-200 flex items-center justify-center text-sm font-medium text-gray-600 shrink-0">
+                {getInitials(selectedOrg.name)}
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-sm">{selectedOrg.name}</p>
+              {selectedOrg.address && (
+                <p className="text-xs text-gray-500 truncate">
+                  {selectedOrg.address}
+                </p>
+              )}
+            </div>
+            <button
+              onClick={() => {
+                setSelectedOrg(null);
+                setConfirmed(false);
+              }}
+              className="text-gray-400 hover:text-gray-600"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          {selectedOrg.claimed ? (
+            <>
+              {/* Claimed — blocked */}
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                <p className="text-sm font-medium text-amber-800">
+                  This organization profile is already claimed by someone.
+                </p>
+                <p className="text-sm text-amber-700 mt-1">
+                  Ask your colleagues to invite you or contact our team.
+                </p>
+              </div>
+              <a
+                href="mailto:contact@fabrixproject.eu"
+                className="block w-full text-center bg-primary text-primary-foreground rounded-lg px-4 py-2 text-sm font-medium hover:bg-primary/90"
+              >
+                Contact Fabrix team
+              </a>
+            </>
+          ) : (
+            <>
+              {/* Unclaimed — can claim */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <p className="text-sm text-blue-800">
+                  This organization profile exists on Fabrix but is not yet
+                  managed by someone.
+                </p>
+              </div>
+              <label className="flex items-start gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={confirmed}
+                  onChange={(e) => setConfirmed(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                />
+                <span className="text-sm text-gray-700">
+                  I confirm that I have the authority to claim this profile
+                </span>
+              </label>
+              <button
+                onClick={() => onClaimOrg(selectedOrg)}
+                disabled={!confirmed}
+                className="w-full bg-primary text-primary-foreground rounded-lg px-4 py-2 text-sm font-medium hover:bg-primary/90 disabled:opacity-50"
+              >
+                Claim this organization
+              </button>
+            </>
+          )}
         </div>
       )}
-
-      {/* No results */}
-      {!isSearching && hasSearched && results.length === 0 && (
-        <p className="text-center text-sm text-gray-500 py-4">
-          No organizations found for &ldquo;{query}&rdquo;
-        </p>
-      )}
-
-      {/* Create new CTA */}
-      <div className="border-t pt-4">
-        <p className="text-sm text-gray-500 mb-3">
-          Can&apos;t find your company?
-        </p>
-        <button
-          onClick={() => onCreateNew(query)}
-          className="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
-        >
-          <svg
-            className="h-4 w-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 4v16m8-8H4"
-            />
-          </svg>
-          Create a new organization
-        </button>
-      </div>
     </div>
   );
 }
@@ -246,10 +336,12 @@ function SearchStep({
 
 function OrgStep({
   initialData,
+  mode,
   onBack,
   onContinue,
 }: {
   initialData: OrgData;
+  mode: Mode;
   onBack: () => void;
   onContinue: (data: OrgData) => void;
 }) {
@@ -266,8 +358,19 @@ function OrgStep({
       : null
   );
 
+  const hasValidLocation =
+    addressData != null &&
+    addressData.address.length > 0 &&
+    typeof addressData.lat === 'number' &&
+    typeof addressData.lon === 'number';
+  const [showAddressError, setShowAddressError] = useState(false);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!hasValidLocation) {
+      setShowAddressError(true);
+      return;
+    }
     onContinue({
       name,
       kind,
@@ -280,6 +383,12 @@ function OrgStep({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {mode === 'claim' && (
+        <p className="text-sm text-gray-500">
+          Review the organization details below. You can update them if needed.
+        </p>
+      )}
+
       <div>
         <label
           htmlFor="org-name"
@@ -302,7 +411,7 @@ function OrgStep({
           htmlFor="org-kind"
           className="block text-sm font-medium text-gray-700 mb-1"
         >
-          Type
+          Organization type
         </label>
         <select
           id="org-kind"
@@ -321,11 +430,25 @@ function OrgStep({
       </div>
 
       <GoogleAddressAutocomplete
-        onSelect={setAddressData}
+        onSelect={(data) => {
+          setAddressData(data);
+          setShowAddressError(false);
+        }}
         initialAddress={initialData.address}
         initialLocation={addressData}
-        showMap={true}
       />
+      {showAddressError && !hasValidLocation && (
+        <p className="text-sm text-red-600 mt-1">
+          Please select an address from the suggestions to set the location.
+        </p>
+      )}
+
+      <div className="bg-gray-50 rounded-lg p-3 mt-4">
+        <p className="text-sm text-gray-600">
+          Next, you will create your personal account to manage this
+          organization on Fabrix.
+        </p>
+      </div>
 
       <div className="flex gap-3 pt-2">
         <button
@@ -350,22 +473,35 @@ function OrgStep({
 
 function AccountStep({
   orgData,
+  claimedOrgId,
+  mode,
   onBack,
 }: {
   orgData: OrgData;
+  claimedOrgId: string | null;
+  mode: Mode;
   onBack: () => void;
 }) {
   const navigate = useNavigate();
 
   const mutation = useMutation({
-    mutationFn: (formData: FormData) =>
-      api.post('/registrations/with_organization', {
-        user: {
-          name: formData.get('name'),
-          email: formData.get('email'),
-          password: formData.get('password'),
-          password_confirmation: formData.get('password_confirmation'),
-        },
+    mutationFn: (formData: FormData) => {
+      const userPayload = {
+        name: formData.get('name'),
+        email: formData.get('email'),
+        password: formData.get('password'),
+        password_confirmation: formData.get('password_confirmation'),
+      };
+
+      if (mode === 'claim' && claimedOrgId) {
+        return api.post('/registrations/with_claim', {
+          user: userPayload,
+          organization_id: claimedOrgId,
+        });
+      }
+
+      return api.post('/registrations/with_organization', {
+        user: userPayload,
         organization: {
           name: orgData.name,
           kind: orgData.kind,
@@ -374,7 +510,8 @@ function AccountStep({
           lat: orgData.lat,
           lon: orgData.lon,
         },
-      }),
+      });
+    },
     onSuccess: () => {
       navigate({ to: '/verify-instructions' });
     },
@@ -388,6 +525,11 @@ function AccountStep({
       }}
       className="space-y-4"
     >
+      <p className="text-sm text-gray-500">
+        Create your account to {mode === 'claim' ? 'claim' : 'register'}{' '}
+        <strong>{orgData.name}</strong> on Fabrix.
+      </p>
+
       <FormError mutation={mutation} />
 
       <div>
@@ -464,6 +606,14 @@ function AccountStep({
         <FieldError mutation={mutation} field="password_confirmation" />
       </div>
 
+      <div className="bg-gray-50 rounded-lg p-3">
+        <p className="text-sm text-gray-600">
+          After creating your account, we will send you a verification email.
+          Please check your inbox to confirm your email address and activate
+          your account.
+        </p>
+      </div>
+
       <div className="flex gap-3 pt-2">
         <button
           type="button"
@@ -487,8 +637,22 @@ function AccountStep({
 
 // ─── Main page ───────────────────────────────────────────────────────────────
 
+const SUBTITLES: Record<Step, string> = {
+  search: 'Select an entity, or create a new one, to register it to Fabrix',
+  org: 'Add information about your organization',
+  account: 'Create your account to finish',
+};
+
+const TITLES: Record<Step, string> = {
+  search: 'What is the name of your organization?',
+  org: 'Add information',
+  account: 'Create an organization profile',
+};
+
 export function RegisterWithOrgPage() {
   const [step, setStep] = useState<Step>('search');
+  const [mode, setMode] = useState<Mode>('create');
+  const [claimedOrgId, setClaimedOrgId] = useState<string | null>(null);
   const [orgData, setOrgData] = useState<OrgData>({
     name: '',
     kind: '',
@@ -496,20 +660,33 @@ export function RegisterWithOrgPage() {
     country_code: '',
   });
 
-  const subtitle: Record<Step, string> = {
-    search: 'Search for your company to get started',
-    org: 'Tell us about your organization',
-    account: 'Create your account to finish',
+  const handleCreateNew = (query: string) => {
+    setMode('create');
+    setClaimedOrgId(null);
+    setOrgData((prev) => ({ ...prev, name: query }));
+    setStep('org');
+  };
+
+  const handleClaimOrg = (org: OrganizationBasic) => {
+    setMode('claim');
+    setClaimedOrgId(org.id);
+    setOrgData({
+      name: org.name,
+      kind: org.kind || '',
+      address: org.address || '',
+      country_code: '',
+      lat: org.lat,
+      lon: org.lon,
+    });
+    setStep('org');
   };
 
   return (
     <div className="max-w-lg mx-auto p-6 mt-12 space-y-6">
       {/* Header */}
       <div className="text-center">
-        <h1 className="text-2xl font-bold text-gray-900">
-          Register with your organization
-        </h1>
-        <p className="text-gray-500 mt-1 text-sm">{subtitle[step]}</p>
+        <h1 className="text-2xl font-bold text-gray-900">{TITLES[step]}</h1>
+        <p className="text-gray-500 mt-1 text-sm">{SUBTITLES[step]}</p>
       </div>
 
       <StepIndicator current={step} />
@@ -518,15 +695,14 @@ export function RegisterWithOrgPage() {
       <div className="bg-white border border-gray-200 rounded-lg p-6">
         {step === 'search' && (
           <SearchStep
-            onCreateNew={(query) => {
-              setOrgData((prev) => ({ ...prev, name: query.trim() }));
-              setStep('org');
-            }}
+            onCreateNew={handleCreateNew}
+            onClaimOrg={handleClaimOrg}
           />
         )}
         {step === 'org' && (
           <OrgStep
             initialData={orgData}
+            mode={mode}
             onBack={() => setStep('search')}
             onContinue={(data) => {
               setOrgData(data);
@@ -535,7 +711,12 @@ export function RegisterWithOrgPage() {
           />
         )}
         {step === 'account' && (
-          <AccountStep orgData={orgData} onBack={() => setStep('org')} />
+          <AccountStep
+            orgData={orgData}
+            claimedOrgId={claimedOrgId}
+            mode={mode}
+            onBack={() => setStep('org')}
+          />
         )}
       </div>
 
