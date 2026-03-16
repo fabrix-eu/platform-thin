@@ -30,6 +30,8 @@ import { CommunitiesPage } from '../routes/communities';
 import { ForgotPasswordPage } from '../routes/forgot-password';
 import { ResetPasswordPage } from '../routes/reset-password';
 import { RegisterPage } from '../routes/register';
+import { RegisterHubPage } from '../routes/register-hub';
+import { RegisterFacilitatorPage } from '../routes/register-facilitator';
 import { RegisterWithOrgPage } from '../routes/register-with-org';
 import { VerifyInstructionsPage } from '../routes/verify-instructions';
 import { VerifyEmailPage } from '../routes/verify-email';
@@ -107,10 +109,22 @@ const resetPasswordRoute = createRoute({
   component: ResetPasswordPage,
 });
 
-const registerRoute = createRoute({
+const registerHubRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/register',
+  component: RegisterHubPage,
+});
+
+const registerBasicRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/register-basic',
   component: RegisterPage,
+});
+
+const registerFacilitatorRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/register-facilitator',
+  component: RegisterFacilitatorPage,
 });
 
 const registerWithOrgRoute = createRoute({
@@ -301,7 +315,9 @@ const communityMatchmakingRoute = createRoute({
 
 const routeTree = rootRoute.addChildren([
   loginRoute,
-  registerRoute,
+  registerHubRoute,
+  registerBasicRoute,
+  registerFacilitatorRoute,
   registerWithOrgRoute,
   verifyInstructionsRoute,
   verifyEmailRoute,

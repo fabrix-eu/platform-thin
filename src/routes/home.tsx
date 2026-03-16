@@ -66,26 +66,18 @@ function LandingPage() {
       <p className="text-lg text-gray-500 mb-8">
         Fabrix connects organizations, facilitators and researchers building a sustainable textile ecosystem in Europe.
       </p>
-      <div className="flex flex-col items-center gap-3">
-        <div className="flex items-center gap-4">
-          <Link
-            to="/register"
-            className="inline-flex items-center px-6 py-3 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors"
-          >
-            Create an account
-          </Link>
-          <Link
-            to="/login"
-            className="inline-flex items-center px-6 py-3 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
-          >
-            Sign in
-          </Link>
-        </div>
+      <div className="flex items-center justify-center gap-4">
         <Link
-          to="/register-with-org"
-          className="text-sm text-primary hover:underline"
+          to="/register"
+          className="inline-flex items-center px-6 py-3 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors"
         >
-          Register with your organization
+          Create an account
+        </Link>
+        <Link
+          to="/login"
+          className="inline-flex items-center px-6 py-3 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+        >
+          Sign in
         </Link>
       </div>
     </div>

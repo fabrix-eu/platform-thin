@@ -726,6 +726,11 @@ export function RegisterWithOrgPage() {
           Sign in
         </Link>
       </p>
+      <p className="mt-2 text-center text-sm text-gray-500">
+        <Link to="/register" className="text-primary hover:underline">
+          Choose another registration type
+        </Link>
+      </p>
     </div>
   );
 }

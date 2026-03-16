@@ -116,9 +116,8 @@ export function RegisterPage() {
       </p>
 
       <p className="mt-2 text-center text-sm text-gray-500">
-        Want to register with your organization?{' '}
-        <Link to="/register-with-org" className="text-primary hover:underline">
-          Register with organization
+        <Link to="/register" className="text-primary hover:underline">
+          Choose another registration type
         </Link>
       </p>
     </div>
