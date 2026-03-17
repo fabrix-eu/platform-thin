@@ -284,7 +284,7 @@ function InvitationsSection({ orgId }: { orgId: string }) {
 
 // --- Settings Page ---
 
-export function OrgSettingsPage() {
+export function OrgSettingsMembersPage() {
   const { orgSlug } = useParams({ strict: false }) as { orgSlug: string };
 
   const me = useQuery({ queryKey: ['me'], queryFn: getMe });
@@ -304,7 +304,7 @@ export function OrgSettingsPage() {
   return (
     <div className="p-6 max-w-3xl mx-auto space-y-8">
       <div>
-        <h1 className="text-2xl font-display font-bold text-gray-900">Settings</h1>
+        <h1 className="text-2xl font-display font-bold text-gray-900">Members</h1>
         <p className="text-sm text-gray-500 mt-1">Manage members and invitations</p>
       </div>
 

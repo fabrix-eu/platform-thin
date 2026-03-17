@@ -3,6 +3,7 @@ import {
   createRootRoute,
   createRoute,
   redirect,
+  Outlet,
 } from '@tanstack/react-router';
 import { z } from 'zod';
 import { RootLayout } from '../routes/root';
@@ -18,7 +19,8 @@ import { OrgProfilePage } from '../routes/org/profile';
 import { OrgRelationsPage } from '../routes/org/relations';
 import { OrgAssessmentsPage } from '../routes/org/assessments';
 import { OrgCommunitiesListPage } from '../routes/org/communities-list';
-import { OrgSettingsPage } from '../routes/org/settings';
+import { OrgSettingsMembersPage } from '../routes/org/settings';
+import { OrgSettingsInformationsPage } from '../routes/org/settings-informations';
 import { CommunityLayout } from '../routes/community/layout';
 import { CommunityOverviewPage } from '../routes/community/index';
 import { CommunityMembersPage } from '../routes/community/members';
@@ -283,7 +285,30 @@ const orgCommunitiesRoute = createRoute({
 const orgSettingsRoute = createRoute({
   getParentRoute: () => orgRoute,
   path: '/settings',
-  component: OrgSettingsPage,
+  component: Outlet,
+});
+
+const orgSettingsIndexRoute = createRoute({
+  getParentRoute: () => orgSettingsRoute,
+  path: '/',
+  beforeLoad: ({ params }) => {
+    throw redirect({
+      to: '/$orgSlug/settings/informations',
+      params: { orgSlug: params.orgSlug },
+    });
+  },
+});
+
+const orgSettingsInformationsRoute = createRoute({
+  getParentRoute: () => orgSettingsRoute,
+  path: '/informations',
+  component: OrgSettingsInformationsPage,
+});
+
+const orgSettingsMembersRoute = createRoute({
+  getParentRoute: () => orgSettingsRoute,
+  path: '/members',
+  component: OrgSettingsMembersPage,
 });
 
 // ── Shell C: Community (/$orgSlug/communities/$communitySlug) ─
@@ -357,7 +382,11 @@ const routeTree = rootRoute.addChildren([
     orgRelationsRoute,
     orgAssessmentsRoute,
     orgCommunitiesRoute,
-    orgSettingsRoute,
+    orgSettingsRoute.addChildren([
+      orgSettingsIndexRoute,
+      orgSettingsInformationsRoute,
+      orgSettingsMembersRoute,
+    ]),
     communityRoute.addChildren([
       communityIndexRoute,
       communityMembersRoute,

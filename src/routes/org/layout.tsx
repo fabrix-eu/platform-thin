@@ -24,7 +24,9 @@ export function OrgLayout() {
   const isRelations = useMatch({ from: '/$orgSlug/relations', shouldThrow: false });
   const isAssessments = useMatch({ from: '/$orgSlug/assessments', shouldThrow: false });
   const isCommunities = useMatch({ from: '/$orgSlug/communities', shouldThrow: false });
-  const isSettings = useMatch({ from: '/$orgSlug/settings', shouldThrow: false });
+  const isSettingsInformations = useMatch({ from: '/$orgSlug/settings/informations', shouldThrow: false });
+  const isSettingsMembers = useMatch({ from: '/$orgSlug/settings/members', shouldThrow: false });
+  const isSettings = !!isSettingsInformations || !!isSettingsMembers;
 
   const navItems: SidebarItem[] = [
     { key: 'dashboard', label: 'Dashboard', href: `/${orgSlug}/dashboard` },
@@ -32,7 +34,6 @@ export function OrgLayout() {
     { key: 'relations', label: 'Relations', href: `/${orgSlug}/relations` },
     { key: 'assessments', label: 'Assessments', href: `/${orgSlug}/assessments` },
     { key: 'communities', label: 'Communities', href: `/${orgSlug}/communities` },
-    { key: 'settings', label: 'Settings', href: `/${orgSlug}/settings` },
   ];
 
   const activeMap: Record<string, boolean> = {
@@ -41,7 +42,6 @@ export function OrgLayout() {
     relations: !!isRelations,
     assessments: !!isAssessments,
     communities: !!isCommunities,
-    settings: !!isSettings,
   };
 
   return (
@@ -65,6 +65,49 @@ export function OrgLayout() {
                 </Link>
               </li>
             ))}
+            <li>
+              <Link
+                to="/$orgSlug/settings/informations"
+                params={{ orgSlug }}
+                className={`block px-3 py-2 text-sm rounded-md transition-colors ${
+                  isSettings
+                    ? 'bg-gray-100 text-gray-900 font-medium'
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                }`}
+              >
+                Settings
+              </Link>
+              {isSettings && (
+                <ul className="mt-0.5 space-y-0.5">
+                  <li>
+                    <Link
+                      to="/$orgSlug/settings/informations"
+                      params={{ orgSlug }}
+                      className={`block pl-6 pr-3 py-1.5 text-sm rounded-md transition-colors ${
+                        isSettingsInformations
+                          ? 'text-gray-900 font-medium'
+                          : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
+                      }`}
+                    >
+                      Informations
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      to="/$orgSlug/settings/members"
+                      params={{ orgSlug }}
+                      className={`block pl-6 pr-3 py-1.5 text-sm rounded-md transition-colors ${
+                        isSettingsMembers
+                          ? 'text-gray-900 font-medium'
+                          : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
+                      }`}
+                    >
+                      Members
+                    </Link>
+                  </li>
+                </ul>
+              )}
+            </li>
           </ul>
 
           {/* Communities section */}
