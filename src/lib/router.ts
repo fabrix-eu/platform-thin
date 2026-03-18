@@ -13,6 +13,7 @@ import { OrganizationsListPage } from '../routes/organizations/list';
 import { OrganizationShowPage } from '../routes/organizations/show';
 import { OrganizationNewPage } from '../routes/organizations/new';
 import { OrganizationEditPage } from '../routes/organizations/edit';
+import { ExplorerLayout } from '../routes/explorer/layout';
 import { OrgLayout } from '../routes/org/layout';
 import { OrgDashboardPage } from '../routes/org/dashboard';
 import { OrgProfilePage } from '../routes/org/profile';
@@ -174,14 +175,20 @@ const testGoogleAddressRoute = createRoute({
 
 // ── Shell A: Explorer ────────────────────────────────────────
 
-const indexRoute = createRoute({
+const explorerRoute = createRoute({
   getParentRoute: () => rootRoute,
+  id: 'explorer',
+  component: ExplorerLayout,
+});
+
+const indexRoute = createRoute({
+  getParentRoute: () => explorerRoute,
   path: '/',
   component: HomePage,
 });
 
 const organizationsRoute = createRoute({
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => explorerRoute,
   path: '/organizations',
   beforeLoad: requireAuth,
 });
@@ -215,14 +222,14 @@ const organizationEditRoute = createRoute({
 });
 
 const mapRoute = createRoute({
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => explorerRoute,
   path: '/map',
   beforeLoad: requireAuth,
   component: MapPage,
 });
 
 const communitiesRoute = createRoute({
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => explorerRoute,
   path: '/communities',
   beforeLoad: requireAuth,
   component: CommunitiesPage,
@@ -366,15 +373,17 @@ const routeTree = rootRoute.addChildren([
   forgotPasswordRoute,
   resetPasswordRoute,
   testGoogleAddressRoute,
-  indexRoute,
-  organizationsRoute.addChildren([
-    organizationsIndexRoute,
-    organizationNewRoute,
-    organizationShowRoute,
-    organizationEditRoute,
+  explorerRoute.addChildren([
+    indexRoute,
+    organizationsRoute.addChildren([
+      organizationsIndexRoute,
+      organizationNewRoute,
+      organizationShowRoute,
+      organizationEditRoute,
+    ]),
+    mapRoute,
+    communitiesRoute,
   ]),
-  mapRoute,
-  communitiesRoute,
   orgRoute.addChildren([
     orgIndexRoute,
     orgDashboardRoute,

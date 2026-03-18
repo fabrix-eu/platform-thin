@@ -1,4 +1,4 @@
-import { Link, Outlet, useNavigate, useMatch } from '@tanstack/react-router';
+import { Link, Outlet, useNavigate } from '@tanstack/react-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getMe, logout } from '../lib/auth';
 import { OrgSwitcher } from '../components/OrgSwitcher';
@@ -16,9 +16,6 @@ export function RootLayout() {
 
   const authed = !!me.data;
 
-  // Detect if we're in org context (Shell B/C)
-  const isOrgContext = useMatch({ from: '/$orgSlug', shouldThrow: false });
-
   const handleLogout = async () => {
     await logout();
     queryClient.setQueryData(['me'], null);
@@ -30,7 +27,7 @@ export function RootLayout() {
     <div className="min-h-screen bg-muted/40">
       <header className="bg-white border-b border-border h-14 flex items-center">
         {/* Left zone — aligned with sidebar width */}
-        <div className="w-64 flex-shrink-0 px-4 border-r border-border h-full flex items-center">
+        <div className="w-64 flex-shrink-0 px-4 h-full flex items-center">
           {authed && me.data && me.data.organizations.length > 0 ? (
             <OrgSwitcher />
           ) : (
@@ -40,50 +37,9 @@ export function RootLayout() {
           )}
         </div>
 
-        {/* Right zone — nav (Shell A only) + user menu */}
-        <div className="flex-1 flex items-center justify-between px-6">
-          {authed ? (
-            <>
-              {!isOrgContext ? (
-                <nav className="flex items-center gap-4">
-                  <Link
-                    to="/"
-                    activeOptions={{ exact: true }}
-                    className="text-sm text-gray-600 hover:text-gray-900"
-                    activeProps={{ className: 'text-sm text-gray-900 font-semibold' }}
-                  >
-                    Home
-                  </Link>
-                  <Link
-                    to="/organizations"
-                    className="text-sm text-gray-600 hover:text-gray-900"
-                    activeProps={{ className: 'text-sm text-gray-900 font-semibold' }}
-                  >
-                    Directory
-                  </Link>
-                  <Link
-                    to="/map"
-                    className="text-sm text-gray-600 hover:text-gray-900"
-                    activeProps={{ className: 'text-sm text-gray-900 font-semibold' }}
-                  >
-                    Map
-                  </Link>
-                  <Link
-                    to="/communities"
-                    className="text-sm text-gray-600 hover:text-gray-900"
-                    activeProps={{ className: 'text-sm text-gray-900 font-semibold' }}
-                  >
-                    Communities
-                  </Link>
-                </nav>
-              ) : (
-                <div />
-              )}
-              <UserMenu user={me.data} onLogout={handleLogout} />
-            </>
-          ) : (
-            <div />
-          )}
+        {/* Right zone — user menu */}
+        <div className="flex-1 flex items-center justify-end px-6">
+          {authed && <UserMenu user={me.data} onLogout={handleLogout} />}
         </div>
       </header>
       <main>

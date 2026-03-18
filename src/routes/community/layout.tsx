@@ -38,17 +38,6 @@ export function CommunityLayout() {
       {/* Community header with tabs */}
       <div className="border-b border-border bg-white">
         <div className="px-6 py-4">
-          <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
-            <Link
-              to="/$orgSlug"
-              params={{ orgSlug }}
-              className="hover:text-gray-700"
-            >
-              {orgSlug}
-            </Link>
-            <span>/</span>
-            <span className="text-gray-900 font-medium">{communitySlug}</span>
-          </div>
           <h1 className="text-xl font-display font-bold text-gray-900">
             {communitySlug}
           </h1>
