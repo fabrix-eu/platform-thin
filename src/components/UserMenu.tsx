@@ -1,19 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
 import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 import type { User } from '../lib/auth';
+import { getInitials } from '../lib/utils';
 
 interface UserMenuProps {
   user: User;
   onLogout: () => void;
-}
-
-function getInitials(name: string) {
-  return name
-    .split(' ')
-    .map((w) => w[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
 }
 
 export function UserMenu({ user, onLogout }: UserMenuProps) {
