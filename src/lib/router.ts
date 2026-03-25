@@ -408,6 +408,10 @@ const communityIndexRoute = createRoute({
 const communityMembersRoute = createRoute({
   getParentRoute: () => communityRoute,
   path: '/members',
+  validateSearch: z.object({
+    search: z.string().optional(),
+    page: z.number().optional(),
+  }),
   component: CommunityMembersPage,
 });
 
