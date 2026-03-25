@@ -7,7 +7,6 @@ import type { Organization } from '../../lib/organizations';
 import {
   getCommunityOrganizations,
   addCommunityOrganization,
-  removeCommunityOrganization,
 } from '../../lib/community-organizations';
 import { getOrganizations } from '../../lib/organizations';
 
@@ -46,12 +45,11 @@ function KindBadge({ kind }: { kind: string | null }) {
   );
 }
 
-function OrgCard({ org }: { org: Organization }) {
+function OrgCard({ org, linkTo }: { org: Organization; linkTo: string }) {
   const kind = org.kind ? ORG_KINDS[org.kind] || ORG_KINDS.other : null;
   return (
     <Link
-      to="/organizations/$id"
-      params={{ id: org.slug || org.id }}
+      to={linkTo}
       className="block bg-white rounded-lg border border-border hover:border-gray-300 hover:shadow-md transition-all group"
     >
       <div className="p-4">
@@ -198,7 +196,7 @@ function AddMemberModal({
 // ── Main page ────────────────────────────────────────────────
 
 export function CommunityMembersPage() {
-  const { communitySlug } = useParams({ strict: false }) as { orgSlug: string; communitySlug: string };
+  const { orgSlug, communitySlug } = useParams({ strict: false }) as { orgSlug: string; communitySlug: string };
   const navigate = useNavigate();
   const qc = useQueryClient();
   const { search, page } = useSearch({ strict: false }) as { search?: string; page?: number };
@@ -214,13 +212,6 @@ export function CommunityMembersPage() {
   const query = useQuery({
     queryKey: ['community_organizations', communitySlug, { page, search }],
     queryFn: () => getCommunityOrganizations(communitySlug, { page: page || 1, per_page: 20, search }),
-  });
-
-  const removeMutation = useMutation({
-    mutationFn: (membershipId: string) => removeCommunityOrganization(communitySlug, membershipId),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['community_organizations', communitySlug] });
-    },
   });
 
   const meta = query.data?.meta;
@@ -304,58 +295,35 @@ export function CommunityMembersPage() {
           {view === 'list' && (
             <div className="divide-y divide-border border border-border rounded-lg bg-card">
               {members.map((m) => (
-                <div key={m.id} className="flex items-center gap-4 px-4 py-3 hover:bg-muted/50 transition-colors">
-                  <Link
-                    to="/organizations/$id"
-                    params={{ id: m.organization.slug || m.organization.id }}
-                    className="flex items-center gap-4 flex-1 min-w-0"
-                  >
-                    <OrgAvatar org={m.organization} />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <p className="font-medium text-foreground truncate">{m.organization.name}</p>
-                      </div>
-                      <div className="flex items-center gap-2 mt-1">
-                        <KindBadge kind={m.organization.kind} />
-                        {m.organization.address && (
-                          <span className="text-xs text-muted-foreground truncate">
-                            {[m.organization.address, m.organization.country_code].filter(Boolean).join(', ')}
-                          </span>
-                        )}
-                      </div>
+                <Link
+                  key={m.id}
+                  to="/$orgSlug/communities/$communitySlug/members/$memberId"
+                  params={{ orgSlug, communitySlug, memberId: m.id }}
+                  className="flex items-center gap-4 px-4 py-3 hover:bg-muted/50 transition-colors"
+                >
+                  <OrgAvatar org={m.organization} />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium text-foreground truncate">{m.organization.name}</p>
                     </div>
-                  </Link>
-
+                    <div className="flex items-center gap-2 mt-1">
+                      <KindBadge kind={m.organization.kind} />
+                      {m.organization.address && (
+                        <span className="text-xs text-muted-foreground truncate">
+                          {[m.organization.address, m.organization.country_code].filter(Boolean).join(', ')}
+                        </span>
+                      )}
+                    </div>
+                  </div>
                   <div className="flex items-center gap-3 shrink-0">
                     {m.organization.relations_count > 0 && (
                       <span className="text-xs text-muted-foreground">
                         {m.organization.relations_count} rel.
                       </span>
                     )}
-                    {isAdmin && (
-                      <button
-                        onClick={() => {
-                          if (confirm(`Remove ${m.organization.name} from this community?`)) {
-                            removeMutation.mutate(m.id);
-                          }
-                        }}
-                        className="text-gray-400 hover:text-red-500 transition-colors"
-                        title="Remove from community"
-                      >
-                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    )}
-                    <Link
-                      to="/organizations/$id"
-                      params={{ id: m.organization.slug || m.organization.id }}
-                      className="text-muted-foreground"
-                    >
-                      →
-                    </Link>
+                    <span className="text-muted-foreground">&rarr;</span>
                   </div>
-                </div>
+                </Link>
               ))}
               {members.length === 0 && (
                 <p className="px-4 py-8 text-center text-muted-foreground">No members found</p>
@@ -366,7 +334,11 @@ export function CommunityMembersPage() {
           {view === 'cards' && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {members.map((m) => (
-                <OrgCard key={m.id} org={m.organization} />
+                <OrgCard
+                  key={m.id}
+                  org={m.organization}
+                  linkTo={`/${orgSlug}/communities/${communitySlug}/members/${m.id}`}
+                />
               ))}
               {members.length === 0 && (
                 <p className="text-center text-muted-foreground col-span-2">No members found</p>

@@ -25,6 +25,7 @@ import { OrgSettingsInformationsPage } from '../routes/org/settings-informations
 import { CommunityLayout } from '../routes/community/layout';
 import { CommunityOverviewPage } from '../routes/community/index';
 import { CommunityMembersPage } from '../routes/community/members';
+import { CommunityMemberDetailPage } from '../routes/community/member-detail';
 import { CommunityEventsListPage } from '../routes/community/events';
 import { CommunityChallengesListPage } from '../routes/community/challenges';
 import { CommunityMatchmakingPage } from '../routes/community/matchmaking';
@@ -415,6 +416,12 @@ const communityMembersRoute = createRoute({
   component: CommunityMembersPage,
 });
 
+const communityMemberDetailRoute = createRoute({
+  getParentRoute: () => communityRoute,
+  path: '/members/$memberId',
+  component: CommunityMemberDetailPage,
+});
+
 const communityEventsRoute = createRoute({
   getParentRoute: () => communityRoute,
   path: '/events',
@@ -535,6 +542,7 @@ const routeTree = rootRoute.addChildren([
     communityRoute.addChildren([
       communityIndexRoute,
       communityMembersRoute,
+      communityMemberDetailRoute,
       communityEventsRoute,
       communityChallengesRoute,
       communityMatchmakingRoute,

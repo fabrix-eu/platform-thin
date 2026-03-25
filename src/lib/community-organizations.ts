@@ -67,6 +67,32 @@ export async function addCommunityOrganization(
   });
 }
 
+export async function getCommunityOrganization(
+  communityId: string,
+  membershipId: string,
+): Promise<CommunityOrganization> {
+  return api.get(`/communities/${communityId}/community_organizations/${membershipId}`);
+}
+
+export async function updateCommunityOrganization(
+  communityId: string,
+  membershipId: string,
+  data: {
+    notes?: string | null;
+    status?: string;
+    economic_health?: string | null;
+    environmental_score?: string | null;
+    specialization?: string | null;
+    annual_turnover?: string | null;
+    number_of_employees?: number | null;
+    growth_rate?: string | null;
+  },
+): Promise<CommunityOrganization> {
+  return api.patch(`/communities/${communityId}/community_organizations/${membershipId}`, {
+    community_organization: data,
+  });
+}
+
 export async function removeCommunityOrganization(
   communityId: string,
   membershipId: string,
