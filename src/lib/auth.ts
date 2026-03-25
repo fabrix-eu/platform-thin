@@ -25,6 +25,14 @@ export interface MeOrganization {
   }[];
 }
 
+export interface AccessibleCommunity {
+  id: string;
+  name: string;
+  slug: string;
+  image_url: string | null;
+  is_admin: boolean;
+}
+
 export interface User {
   id: string;
   email: string;
@@ -32,6 +40,7 @@ export interface User {
   role: string;
   image_url: string | null;
   organizations: MeOrganization[];
+  accessible_communities: AccessibleCommunity[];
 }
 
 export async function login(email: string, password: string): Promise<AuthTokens> {

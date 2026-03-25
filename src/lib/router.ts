@@ -28,8 +28,11 @@ import { CommunityMembersPage } from '../routes/community/members';
 import { CommunityEventsListPage } from '../routes/community/events';
 import { CommunityChallengesListPage } from '../routes/community/challenges';
 import { CommunityMatchmakingPage } from '../routes/community/matchmaking';
+import { CommunityJoinRequestsPage } from '../routes/community/join-requests';
 import { MapPage } from '../routes/map';
 import { CommunitiesPage } from '../routes/communities';
+import { CommunityShowPage } from '../routes/communities/show';
+import { CommunityNewPage } from '../routes/communities/new';
 import { ForgotPasswordPage } from '../routes/forgot-password';
 import { ResetPasswordPage } from '../routes/reset-password';
 import { RegisterPage } from '../routes/register';
@@ -102,7 +105,11 @@ async function requireCommunityMember({
   const hasCommunity = org?.communities.some(
     (c) => c.community_slug === params.communitySlug
   );
-  if (!hasCommunity) {
+  // Also allow community admins (e.g. facilitator who created the community)
+  const isCommunityAdmin = me.accessible_communities?.some(
+    (c) => c.slug === params.communitySlug && c.is_admin
+  );
+  if (!hasCommunity && !isCommunityAdmin) {
     throw redirect({
       to: '/$orgSlug/communities',
       params: { orgSlug: params.orgSlug },
@@ -269,7 +276,25 @@ const communitiesRoute = createRoute({
   getParentRoute: () => explorerRoute,
   path: '/communities',
   beforeLoad: requireAuth,
+});
+
+const communitiesIndexRoute = createRoute({
+  getParentRoute: () => communitiesRoute,
+  path: '/',
   component: CommunitiesPage,
+});
+
+const communityNewRoute = createRoute({
+  getParentRoute: () => communitiesRoute,
+  path: '/new',
+  beforeLoad: requireAuth,
+  component: CommunityNewPage,
+});
+
+const communityShowRoute = createRoute({
+  getParentRoute: () => communitiesRoute,
+  path: '/$id',
+  component: CommunityShowPage,
 });
 
 // ── Shell B: Mon Organisation (/$orgSlug) ────────────────────
@@ -396,6 +421,12 @@ const communityMatchmakingRoute = createRoute({
   component: CommunityMatchmakingPage,
 });
 
+const communityJoinRequestsRoute = createRoute({
+  getParentRoute: () => communityRoute,
+  path: '/join-requests',
+  component: CommunityJoinRequestsPage,
+});
+
 // ── Admin ────────────────────────────────────────────────────
 
 const adminRoute = createRoute({
@@ -470,7 +501,11 @@ const routeTree = rootRoute.addChildren([
       organizationEditRoute,
     ]),
     mapRoute,
-    communitiesRoute,
+    communitiesRoute.addChildren([
+      communitiesIndexRoute,
+      communityNewRoute,
+      communityShowRoute,
+    ]),
   ]),
   orgRoute.addChildren([
     orgIndexRoute,
@@ -490,6 +525,7 @@ const routeTree = rootRoute.addChildren([
       communityEventsRoute,
       communityChallengesRoute,
       communityMatchmakingRoute,
+      communityJoinRequestsRoute,
     ]),
   ]),
 ]);

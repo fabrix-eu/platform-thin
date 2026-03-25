@@ -11,6 +11,12 @@ import {
   cancelInvitation,
 } from '../../lib/organization-members';
 import type { OrganizationMember, OrganizationInvitation } from '../../lib/organization-members';
+import {
+  getJoinRequests,
+  acceptJoinRequest,
+  declineJoinRequest,
+} from '../../lib/join-requests';
+import type { JoinRequest } from '../../lib/join-requests';
 import { FieldError, FormError } from '../../components/FieldError';
 import { Avatar, AvatarFallback, AvatarImage } from '../../components/ui/avatar';
 
@@ -155,6 +161,153 @@ function MembersSection({
         {members.length === 0 && (
           <p className="px-4 py-6 text-sm text-gray-500 text-center">No members yet.</p>
         )}
+      </div>
+    </section>
+  );
+}
+
+// --- Join Requests Section ---
+
+function StatusBadge({ status }: { status: JoinRequest['status'] }) {
+  const styles: Record<string, string> = {
+    pending: 'bg-amber-100 text-amber-800',
+    accepted: 'bg-green-100 text-green-800',
+    declined: 'bg-red-100 text-red-800',
+    cancelled: 'bg-gray-100 text-gray-600',
+  };
+  return (
+    <span className={`inline-block px-2 py-0.5 text-xs font-medium rounded-full ${styles[status] || styles.cancelled}`}>
+      {status}
+    </span>
+  );
+}
+
+function JoinRequestsSection({ orgId }: { orgId: string }) {
+  const queryClient = useQueryClient();
+  const [decliningId, setDecliningId] = useState<string | null>(null);
+  const [declineReason, setDeclineReason] = useState('');
+
+  const joinRequestsQuery = useQuery({
+    queryKey: ['organizations', orgId, 'join-requests'],
+    queryFn: () => getJoinRequests(orgId),
+  });
+
+  const acceptMutation = useMutation({
+    mutationFn: (id: string) => acceptJoinRequest(orgId, id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['organizations', orgId, 'join-requests'] });
+      queryClient.invalidateQueries({ queryKey: ['organizations', orgId, 'members'] });
+    },
+  });
+
+  const declineMutation = useMutation({
+    mutationFn: ({ id, reason }: { id: string; reason: string }) =>
+      declineJoinRequest(orgId, id, reason),
+    onSuccess: () => {
+      setDecliningId(null);
+      setDeclineReason('');
+      queryClient.invalidateQueries({ queryKey: ['organizations', orgId, 'join-requests'] });
+    },
+  });
+
+  const requests = joinRequestsQuery.data ?? [];
+  if (requests.length === 0) return null;
+
+  // Pending first, then rest sorted by date
+  const sorted = [...requests].sort((a, b) => {
+    if (a.status === 'pending' && b.status !== 'pending') return -1;
+    if (a.status !== 'pending' && b.status === 'pending') return 1;
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+  });
+
+  return (
+    <section>
+      <h2 className="text-lg font-semibold text-gray-900 mb-3">Join Requests</h2>
+
+      <FormError mutation={acceptMutation} />
+      <FormError mutation={declineMutation} />
+
+      <div className="bg-white border border-gray-200 rounded-lg divide-y divide-gray-100">
+        {sorted.map((req) => (
+          <div key={req.id} className="px-4 py-3 space-y-2">
+            <div className="flex items-center gap-3">
+              <Avatar className="h-8 w-8 flex-shrink-0">
+                {req.user.image_url && (
+                  <AvatarImage src={req.user.image_url} alt={req.user.name} />
+                )}
+                <AvatarFallback className="text-xs">
+                  {initials(req.user.name)}
+                </AvatarFallback>
+              </Avatar>
+
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-900 truncate">{req.user.name}</p>
+                <p className="text-xs text-gray-500 truncate">{req.user.email}</p>
+              </div>
+
+              <StatusBadge status={req.status} />
+
+              <span className="text-xs text-gray-400">
+                {new Date(req.created_at).toLocaleDateString()}
+              </span>
+            </div>
+
+            {req.message && (
+              <p className="text-sm text-gray-600 ml-11 line-clamp-2">{req.message}</p>
+            )}
+
+            {req.status === 'pending' && (
+              <div className="ml-11 flex items-center gap-2">
+                {decliningId === req.id ? (
+                  <div className="flex gap-2 flex-1">
+                    <input
+                      type="text"
+                      value={declineReason}
+                      onChange={(e) => setDeclineReason(e.target.value)}
+                      placeholder="Reason for declining (optional)"
+                      className="flex-1 border border-gray-300 rounded px-2 py-1 text-sm focus:ring-2 focus:ring-ring focus:outline-none"
+                    />
+                    <button
+                      onClick={() => declineMutation.mutate({ id: req.id, reason: declineReason })}
+                      disabled={declineMutation.isPending}
+                      className="text-xs text-red-600 hover:text-red-800 font-medium disabled:opacity-50"
+                    >
+                      Confirm
+                    </button>
+                    <button
+                      onClick={() => { setDecliningId(null); setDeclineReason(''); }}
+                      className="text-xs text-gray-500 hover:text-gray-700"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => acceptMutation.mutate(req.id)}
+                      disabled={acceptMutation.isPending}
+                      className="text-xs font-medium text-green-700 hover:text-green-900 disabled:opacity-50"
+                    >
+                      Accept
+                    </button>
+                    <button
+                      onClick={() => setDecliningId(req.id)}
+                      className="text-xs font-medium text-red-600 hover:text-red-800"
+                    >
+                      Decline
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+
+            {req.status === 'declined' && req.decline_reason && (
+              <p className="text-xs text-gray-500 ml-11 italic">
+                Reason: {req.decline_reason}
+              </p>
+            )}
+          </div>
+        ))}
       </div>
     </section>
   );
@@ -309,6 +462,8 @@ export function OrgSettingsMembersPage() {
       </div>
 
       <MembersSection orgId={orgId} isOwner={isOwner} currentUserId={currentUserId} />
+
+      {isOwner && <JoinRequestsSection orgId={orgId} />}
 
       {isOwner && <InvitationsSection orgId={orgId} />}
     </div>

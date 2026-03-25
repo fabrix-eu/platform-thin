@@ -12,7 +12,15 @@ export function OrgCommunitiesListPage() {
     (o) => o.organization_slug === orgSlug
   );
 
-  const communities = userOrg?.communities ?? [];
+  const communities = (userOrg?.communities ?? []).map((c) => ({
+    id: c.community_id,
+    name: c.community_name,
+    slug: c.community_slug,
+    image_url: c.community_image_url,
+    is_admin: me.data?.accessible_communities?.some(
+      (ac) => ac.slug === c.community_slug && ac.is_admin
+    ) ?? false,
+  }));
 
   if (me.isLoading) {
     return <div className="p-6 text-gray-500">Loading...</div>;
@@ -30,7 +38,7 @@ export function OrgCommunitiesListPage() {
       {communities.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {communities.map((c) => {
-            const initials = c.community_name
+            const initials = c.name
               .split(' ')
               .map((w) => w[0])
               .join('')
@@ -39,16 +47,16 @@ export function OrgCommunitiesListPage() {
 
             return (
               <Link
-                key={c.community_id}
+                key={c.id}
                 to="/$orgSlug/communities/$communitySlug"
-                params={{ orgSlug, communitySlug: c.community_slug }}
+                params={{ orgSlug, communitySlug: c.slug }}
                 className="block bg-white rounded-lg border border-border hover:border-gray-300 hover:shadow-md transition-all group"
               >
                 <div className="p-4 flex items-center gap-3">
-                  {c.community_image_url ? (
+                  {c.image_url ? (
                     <img
-                      src={c.community_image_url}
-                      alt={c.community_name}
+                      src={c.image_url}
+                      alt={c.name}
                       className="h-10 w-10 rounded-lg object-cover flex-shrink-0"
                     />
                   ) : (
@@ -58,9 +66,14 @@ export function OrgCommunitiesListPage() {
                   )}
                   <div className="flex-1 min-w-0">
                     <h3 className="font-display font-semibold text-sm text-gray-900 truncate group-hover:text-primary transition-colors">
-                      {c.community_name}
+                      {c.name}
                     </h3>
                   </div>
+                  {c.is_admin && (
+                    <span className="text-xs font-medium bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full flex-shrink-0">
+                      Admin
+                    </span>
+                  )}
                   <svg className="h-4 w-4 text-gray-400 group-hover:text-gray-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
                   </svg>

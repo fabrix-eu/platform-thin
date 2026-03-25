@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { Link } from '@tanstack/react-router';
 import { searchOrganizations, ORG_KINDS } from '../../lib/organizations';
 import type { OrganizationBasic } from '../../lib/organizations';
 import { getInitials } from '../../lib/utils';
@@ -214,20 +215,27 @@ export function OrgSearchStep({ onCreateNew, onClaimOrg }: OrgSearchStepProps) {
 
           {selectedOrg.claimed ? (
             <>
-              {/* Claimed — blocked */}
+              {/* Claimed — link to profile to request to join */}
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
                 <p className="text-sm font-medium text-amber-800">
-                  This organization profile is already claimed by someone.
+                  This organization is already claimed.
                 </p>
                 <p className="text-sm text-amber-700 mt-1">
-                  Ask your colleagues to invite you or contact our team.
+                  You can request to join from their profile page.
                 </p>
               </div>
-              <a
-                href="mailto:contact@fabrixproject.eu"
+              <Link
+                to="/organizations/$id"
+                params={{ id: selectedOrg.id }}
                 className="block w-full text-center bg-primary text-primary-foreground rounded-lg px-4 py-2 text-sm font-medium hover:bg-primary/90"
               >
-                Contact Fabrix team
+                View organization profile
+              </Link>
+              <a
+                href="mailto:contact@fabrixproject.eu"
+                className="block text-center text-xs text-gray-500 hover:text-gray-700"
+              >
+                Or contact our team
               </a>
             </>
           ) : (

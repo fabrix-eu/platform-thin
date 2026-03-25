@@ -3,6 +3,7 @@ import { Link, useParams, useRouter } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { getMe, type MeOrganization } from '../lib/auth';
 import { ORG_KINDS } from '../lib/organizations';
+import { getPendingActions } from '../lib/pending-actions';
 
 function OrgAvatar({ org }: { org: MeOrganization }) {
   const initials = org.organization_name
@@ -76,6 +77,19 @@ export function OrgSwitcher() {
   const me = useQuery({ queryKey: ['me'], queryFn: getMe });
   const organizations = me.data?.organizations ?? [];
 
+  const ownedOrgs = organizations
+    .filter((o) => o.role === 'owner')
+    .map((o) => ({ id: o.organization_id, slug: o.organization_slug, name: o.organization_name }));
+
+  const pendingActions = useQuery({
+    queryKey: ['pending-actions', ownedOrgs.map((o) => o.id)],
+    queryFn: () => getPendingActions(ownedOrgs),
+    enabled: !!me.data,
+    staleTime: 60_000,
+  });
+
+  const hasPendingActions = (pendingActions.data?.total ?? 0) > 0;
+
   const currentOrg = orgSlug
     ? organizations.find((o) => o.organization_slug === orgSlug)
     : null;
@@ -105,10 +119,13 @@ export function OrgSwitcher() {
       {/* Home link */}
       <Link
         to="/"
-        className="flex items-center text-gray-400 hover:text-gray-700 transition-colors p-1 rounded-md hover:bg-gray-100"
+        className="relative flex items-center text-gray-400 hover:text-gray-700 transition-colors p-1 rounded-md hover:bg-gray-100"
         title="Explorer"
       >
         <HomeIcon />
+        {hasPendingActions && (
+          <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-amber-500 border-2 border-white" />
+        )}
       </Link>
 
       {/* Separator */}

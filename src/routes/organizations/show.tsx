@@ -5,6 +5,9 @@ import { getOrganization, deleteOrganization, ORG_KINDS } from '../../lib/organi
 import type { Organization } from '../../lib/organizations';
 import { getMockSections, COVER_IMAGES } from '../../lib/mockOrgData';
 import type { MockSection } from '../../lib/mockOrgData';
+import { getMe } from '../../lib/auth';
+import { createJoinRequest, getMyJoinRequests } from '../../lib/join-requests';
+import { FieldError, FormError } from '../../components/FieldError';
 
 function OrgAvatar({ org, size = 'lg' }: { org: Organization; size?: 'sm' | 'lg' }) {
   const sizeClass = size === 'lg' ? 'w-20 h-20 text-2xl' : 'w-10 h-10 text-sm';
@@ -139,10 +142,92 @@ function AdminMenu({
   );
 }
 
+function JoinRequestButton({ orgId }: { orgId: string }) {
+  const queryClient = useQueryClient();
+  const [showForm, setShowForm] = useState(false);
+  const [message, setMessage] = useState('');
+
+  const myRequestsQuery = useQuery({
+    queryKey: ['my', 'join-requests'],
+    queryFn: getMyJoinRequests,
+  });
+
+  const mutation = useMutation({
+    mutationFn: (msg: string) => createJoinRequest(orgId, msg),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['my', 'join-requests'] });
+      setShowForm(false);
+      setMessage('');
+    },
+  });
+
+  const pendingRequest = myRequestsQuery.data?.find(
+    (r) => r.organization.id === orgId && r.status === 'pending',
+  );
+
+  if (pendingRequest) {
+    return (
+      <span className="inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium bg-amber-100 text-amber-800">
+        Request pending
+      </span>
+    );
+  }
+
+  if (mutation.isSuccess) {
+    return (
+      <p className="text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+        Request sent! You will be notified once reviewed.
+      </p>
+    );
+  }
+
+  if (!showForm) {
+    return (
+      <button
+        onClick={() => setShowForm(true)}
+        className="bg-primary text-primary-foreground rounded-lg px-4 py-2 text-sm font-medium hover:bg-primary/90 transition-colors"
+      >
+        Request to join
+      </button>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-2 w-72">
+      <textarea
+        value={message}
+        onChange={(e) => setMessage(e.target.value)}
+        placeholder="Why do you want to join this organization? (min. 10 characters)"
+        rows={3}
+        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-ring focus:outline-none resize-none"
+      />
+      <FieldError mutation={mutation} field="message" />
+      <FormError mutation={mutation} />
+      <div className="flex gap-2">
+        <button
+          onClick={() => mutation.mutate(message)}
+          disabled={message.trim().length < 10 || mutation.isPending}
+          className="bg-primary text-primary-foreground rounded-lg px-4 py-2 text-sm font-medium hover:bg-primary/90 disabled:opacity-50"
+        >
+          {mutation.isPending ? 'Sending...' : 'Send request'}
+        </button>
+        <button
+          onClick={() => { setShowForm(false); setMessage(''); }}
+          className="border border-gray-300 rounded-lg px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function OrganizationShowPage() {
   const { id } = useParams({ strict: false }) as { id: string };
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+
+  const meQuery = useQuery({ queryKey: ['me'], queryFn: getMe });
 
   const query = useQuery({
     queryKey: ['organizations', id],
@@ -181,6 +266,9 @@ export function OrganizationShowPage() {
   }
 
   const org = query.data!;
+  const me = meQuery.data;
+  const isMember = me?.organizations.some((o) => o.organization_id === org.id) ?? false;
+  const isLoggedIn = !!me;
   const kindConfig = org.kind ? ORG_KINDS[org.kind] || ORG_KINDS.other : null;
   const coverUrl = org.cover_url || (org.kind && COVER_IMAGES[org.kind]) || COVER_IMAGES.default;
   const sections = getMockSections(org.kind);
@@ -244,6 +332,9 @@ export function OrganizationShowPage() {
                 <button className="bg-yellow-500 text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-yellow-600 transition-colors">
                   Claim
                 </button>
+              )}
+              {org.claimed && isLoggedIn && !isMember && (
+                <JoinRequestButton orgId={org.id} />
               )}
               {org.email ? (
                 <a

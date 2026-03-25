@@ -1,19 +1,99 @@
-import { FeatureIntro } from '../components/FeatureIntro';
+import { useState } from 'react';
+import { Link } from '@tanstack/react-router';
+import { useQuery } from '@tanstack/react-query';
+import { getCommunities } from '../lib/communities';
+import { getMe } from '../lib/auth';
 
 export function CommunitiesPage() {
+  const [search, setSearch] = useState('');
+
+  const query = useQuery({
+    queryKey: ['communities', { search }],
+    queryFn: () => getCommunities({ search: search || undefined }),
+  });
+
+  const meQuery = useQuery({ queryKey: ['me'], queryFn: getMe });
+  const communities = query.data?.data ?? [];
+  const canCreate = meQuery.data?.role === 'facilitator' || meQuery.data?.role === 'admin';
+
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
-      <h1 className="text-2xl font-display font-bold text-gray-900">Communities</h1>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-display font-bold text-gray-900">Communities</h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Discover communities and request to join with your organization.
+          </p>
+        </div>
+        {canCreate && (
+          <Link
+            to="/communities/new"
+            className="bg-primary text-primary-foreground rounded-lg px-4 py-2 text-sm font-medium hover:bg-primary/90 transition-colors shrink-0"
+          >
+            Create community
+          </Link>
+        )}
+      </div>
 
-      <FeatureIntro
-        icon={
-          <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" />
-          </svg>
-        }
-        title="Join a community"
-        description="Communities bring together organizations around shared goals — events, challenges, matchmaking, and collective support from local facilitators."
+      <input
+        type="text"
+        placeholder="Search communities..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-ring focus:outline-none"
       />
+
+      {query.isLoading && (
+        <div className="text-gray-500 text-sm">Loading...</div>
+      )}
+
+      {communities.length === 0 && !query.isLoading && (
+        <p className="text-sm text-gray-500">No communities found.</p>
+      )}
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {communities.map((c) => {
+          const initials = c.name
+            .split(' ')
+            .map((w) => w[0])
+            .join('')
+            .slice(0, 2)
+            .toUpperCase();
+
+          return (
+            <Link
+              key={c.id}
+              to="/communities/$id"
+              params={{ id: c.slug || c.id }}
+              className="block bg-white rounded-lg border border-border hover:border-gray-300 hover:shadow-md transition-all group"
+            >
+              <div className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-sm font-semibold flex-shrink-0">
+                    {initials}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-display font-semibold text-sm text-gray-900 truncate group-hover:text-primary transition-colors">
+                      {c.name}
+                    </h3>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      {c.organizations_count} {c.organizations_count === 1 ? 'organization' : 'organizations'}
+                    </p>
+                  </div>
+                  {c.is_member && (
+                    <span className="text-xs font-medium bg-green-100 text-green-800 px-2 py-0.5 rounded-full flex-shrink-0">
+                      Member
+                    </span>
+                  )}
+                </div>
+                {c.description && (
+                  <p className="text-xs text-gray-500 mt-2 line-clamp-2">{c.description}</p>
+                )}
+              </div>
+            </Link>
+          );
+        })}
+      </div>
     </div>
   );
 }

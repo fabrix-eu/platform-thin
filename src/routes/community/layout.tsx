@@ -1,4 +1,6 @@
 import { Link, Outlet, useParams, useMatch } from '@tanstack/react-router';
+import { useQuery } from '@tanstack/react-query';
+import { getMe } from '../../lib/auth';
 
 interface TabItem {
   key: string;
@@ -12,6 +14,11 @@ export function CommunityLayout() {
     communitySlug: string;
   };
 
+  const meQuery = useQuery({ queryKey: ['me'], queryFn: getMe });
+  const isAdmin = meQuery.data?.accessible_communities?.some(
+    (c) => c.slug === communitySlug && c.is_admin
+  ) ?? false;
+
   const basePath = `/${orgSlug}/communities/${communitySlug}`;
 
   const tabs: TabItem[] = [
@@ -20,6 +27,7 @@ export function CommunityLayout() {
     { key: 'events', label: 'Events', path: `${basePath}/events` },
     { key: 'challenges', label: 'Challenges', path: `${basePath}/challenges` },
     { key: 'matchmaking', label: 'Matchmaking', path: `${basePath}/matchmaking` },
+    ...(isAdmin ? [{ key: 'join-requests', label: 'Join Requests', path: `${basePath}/join-requests` }] : []),
   ];
 
   // Detect active tab from URL
@@ -39,7 +47,7 @@ export function CommunityLayout() {
       <div className="border-b border-border bg-white">
         <div className="px-6 py-4">
           <h1 className="text-xl font-display font-bold text-gray-900">
-            {communitySlug}
+            {meQuery.data?.accessible_communities?.find((c) => c.slug === communitySlug)?.name ?? communitySlug}
           </h1>
         </div>
 
