@@ -19,6 +19,8 @@ import { OrgDashboardPage } from '../routes/org/dashboard';
 import { OrgProfilePage } from '../routes/org/profile';
 import { OrgRelationsPage } from '../routes/org/relations';
 import { OrgAssessmentsPage } from '../routes/org/assessments';
+import { AssessmentFormPage } from '../routes/org/assessment-form';
+import { AssessmentResultsPage } from '../routes/org/assessment-results';
 import { OrgCommunitiesListPage } from '../routes/org/communities-list';
 import { OrgSettingsMembersPage } from '../routes/org/settings';
 import { OrgSettingsInformationsPage } from '../routes/org/settings-informations';
@@ -354,6 +356,18 @@ const orgAssessmentsRoute = createRoute({
   component: OrgAssessmentsPage,
 });
 
+const orgAssessmentFormRoute = createRoute({
+  getParentRoute: () => orgRoute,
+  path: '/assessments/$formId',
+  component: AssessmentFormPage,
+});
+
+const orgAssessmentResultsRoute = createRoute({
+  getParentRoute: () => orgRoute,
+  path: '/assessments/$formId/results',
+  component: AssessmentResultsPage,
+});
+
 const orgCommunitiesRoute = createRoute({
   getParentRoute: () => orgRoute,
   path: '/communities',
@@ -533,6 +547,8 @@ const routeTree = rootRoute.addChildren([
     orgProfileRoute,
     orgRelationsRoute,
     orgAssessmentsRoute,
+    orgAssessmentResultsRoute,
+    orgAssessmentFormRoute,
     orgCommunitiesRoute,
     orgSettingsRoute.addChildren([
       orgSettingsIndexRoute,
