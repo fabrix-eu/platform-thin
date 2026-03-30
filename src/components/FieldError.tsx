@@ -23,6 +23,8 @@ export function FormError({ mutation }: { mutation: AnyMutation }) {
     const base = error.errors?.base;
     if (base?.[0]) {
       msg = base[0];
+    } else if (error.message && !error.message.startsWith('API Error')) {
+      msg = error.message;
     } else {
       switch (error.status) {
         case 401: msg = 'You need to sign in to continue.'; break;
