@@ -25,6 +25,64 @@ interface Release {
 
 const RELEASES: Release[] = [
   {
+    date: 'March 30, 2026',
+    title: 'Relations & bug fixes',
+    items: [
+      {
+        tag: 'new',
+        text: 'Relations page — view your organization\'s relations on an interactive map centered on your location, with a searchable and paginated list below.',
+      },
+      {
+        tag: 'fixed',
+        text: 'Server error messages (e.g. "Invalid email or password") now display correctly instead of generic fallback messages.',
+      },
+    ],
+  },
+  {
+    date: 'March 26, 2026',
+    title: 'Impact Compass assessments',
+    items: [
+      {
+        tag: 'new',
+        text: 'Assessment list — see all available assessment forms with radar chart overview and score cards for completed assessments.',
+      },
+      {
+        tag: 'new',
+        text: 'Assessment wizard — answer questions one at a time with auto-save, progress indicator, and conditional follow-up questions.',
+      },
+      {
+        tag: 'new',
+        text: 'Assessment results — detailed breakdown with score circle, section-by-section analysis, recommendations, and history of past submissions.',
+      },
+    ],
+  },
+  {
+    date: 'March 25, 2026',
+    title: 'Community members',
+    items: [
+      {
+        tag: 'new',
+        text: 'Community members directory — browse members with search, list/card view toggle, and pagination.',
+      },
+      {
+        tag: 'new',
+        text: 'Member detail page — view a member\'s full profile within the community context, with cover image, description, communities, and related organizations.',
+      },
+      {
+        tag: 'new',
+        text: 'Facilitator sidebar — community admins see a sticky sidebar on member detail pages with editable notes, member info, and management actions.',
+      },
+      {
+        tag: 'new',
+        text: 'Admin member management — add organizations to the community via search modal, remove members from the detail page.',
+      },
+      {
+        tag: 'improved',
+        text: 'Notifications page now uses infinite scroll — pages load automatically as you scroll down.',
+      },
+    ],
+  },
+  {
     date: 'March 25, 2026',
     title: 'Notifications',
     items: [
