@@ -68,6 +68,7 @@ export interface Organization {
   product_types?: string[];
   nace_code?: string | null;
   sector?: string | null;
+  organization_photos?: { id: string; url: string; caption: string | null; position: number }[];
   communities?: OrganizationCommunity[];
   relations?: unknown[];
   related_organizations?: Organization[];

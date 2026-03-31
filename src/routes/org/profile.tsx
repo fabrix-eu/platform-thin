@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Link, useParams } from '@tanstack/react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getOrganization, updateOrganization, ORG_KINDS } from '../../lib/organizations';
+import { getOrganizationPhotos, createOrganizationPhoto, deleteOrganizationPhoto } from '../../lib/organization-photos';
+import { uploadFile } from '../../lib/uploads';
 import { GoogleAddressAutocomplete } from '../../components/GoogleAddressAutocomplete';
 import type { AddressData } from '../../components/GoogleAddressAutocomplete';
 import { FieldError, FormError } from '../../components/FieldError';
@@ -13,7 +15,7 @@ type SectionId = 'informations' | 'data' | 'photos' | 'products' | 'services';
 const SECTIONS: { id: SectionId; label: string; ready: boolean }[] = [
   { id: 'informations', label: 'Informations', ready: true },
   { id: 'data', label: 'Data', ready: true },
-  { id: 'photos', label: 'Photos', ready: false },
+  { id: 'photos', label: 'Photos', ready: true },
   { id: 'products', label: 'Products', ready: false },
   { id: 'services', label: 'Services & Skills', ready: false },
 ];
@@ -320,6 +322,128 @@ function DataSection({ orgSlug }: { orgSlug: string }) {
   );
 }
 
+// ─── Photos section ───────────────────────────────────────────────────────────
+
+function PhotosSection({ orgSlug }: { orgSlug: string }) {
+  const queryClient = useQueryClient();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const orgQuery = useQuery({
+    queryKey: ['organizations', orgSlug],
+    queryFn: () => getOrganization(orgSlug),
+  });
+
+  const photosQuery = useQuery({
+    queryKey: ['organizations', orgSlug, 'photos'],
+    queryFn: () => getOrganizationPhotos(orgQuery.data!.id),
+    enabled: !!orgQuery.data,
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (photoId: string) => deleteOrganizationPhoto(orgQuery.data!.id, photoId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['organizations', orgSlug, 'photos'] });
+      queryClient.invalidateQueries({ queryKey: ['organizations', orgSlug] });
+    },
+  });
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files?.length || !orgQuery.data) return;
+
+    setUploading(true);
+    try {
+      for (const file of Array.from(files)) {
+        const url = await uploadFile(file, 'Organization', orgQuery.data.id);
+        await createOrganizationPhoto(orgQuery.data.id, { url });
+      }
+      queryClient.invalidateQueries({ queryKey: ['organizations', orgSlug, 'photos'] });
+      queryClient.invalidateQueries({ queryKey: ['organizations', orgSlug] });
+    } catch (err) {
+      console.error('Upload failed:', err);
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const photos = photosQuery.data ?? orgQuery.data?.organization_photos ?? [];
+
+  return (
+    <div className="space-y-4">
+      {/* Upload button */}
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-gray-500">{photos.length} photo{photos.length !== 1 ? 's' : ''}</p>
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploading}
+          className="inline-flex items-center gap-1.5 bg-primary text-primary-foreground rounded-lg px-4 py-2 text-sm font-medium hover:bg-primary/90 disabled:opacity-50"
+        >
+          {uploading ? (
+            'Uploading...'
+          ) : (
+            <>
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
+              Add photos
+            </>
+          )}
+        </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          onChange={handleFileChange}
+          className="hidden"
+        />
+      </div>
+
+      {/* Photo grid */}
+      {photos.length === 0 ? (
+        <div className="py-12 text-center border-2 border-dashed border-gray-200 rounded-lg">
+          <svg className="mx-auto w-10 h-10 text-gray-300" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0 0 22.5 18.75V5.25A2.25 2.25 0 0 0 20.25 3H3.75A2.25 2.25 0 0 0 1.5 5.25v13.5A2.25 2.25 0 0 0 3.75 21Z" />
+          </svg>
+          <p className="text-sm text-gray-400 mt-2">No photos yet. Add photos to showcase your organization.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          {photos.map((photo) => (
+            <div key={photo.id} className="relative group rounded-lg overflow-hidden aspect-[4/3]">
+              <img
+                src={photo.url}
+                alt={photo.caption || ''}
+                className="w-full h-full object-cover"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  if (confirm('Delete this photo?')) deleteMutation.mutate(photo.id);
+                }}
+                disabled={deleteMutation.isPending}
+                className="absolute top-2 right-2 bg-black/60 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/80"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                </svg>
+              </button>
+              {photo.caption && (
+                <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 to-transparent px-3 py-2">
+                  <p className="text-xs text-white truncate">{photo.caption}</p>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Coming soon stub ─────────────────────────────────────────────────────────
 
 function ComingSoonSection({ label }: { label: string }) {
@@ -399,7 +523,7 @@ export function OrgProfilePage() {
               <InformationsSection orgSlug={orgSlug} />
             )}
             {activeSection === 'data' && <DataSection orgSlug={orgSlug} />}
-            {activeSection === 'photos' && <ComingSoonSection label="Photos" />}
+            {activeSection === 'photos' && <PhotosSection orgSlug={orgSlug} />}
             {activeSection === 'products' && <ComingSoonSection label="Products" />}
             {activeSection === 'services' && <ComingSoonSection label="Services & Skills" />}
           </div>

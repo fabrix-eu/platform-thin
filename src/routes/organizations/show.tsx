@@ -408,6 +408,24 @@ export function OrganizationShowPage() {
           </section>
         )}
 
+        {/* Photos */}
+        {org.organization_photos && org.organization_photos.length > 0 && (
+          <section className="bg-white border border-gray-200 rounded-lg p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Photos</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {org.organization_photos.map((photo) => (
+                <div key={photo.id} className="rounded-lg overflow-hidden aspect-[4/3]">
+                  <img
+                    src={photo.url}
+                    alt={photo.caption || ''}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
         {/* Mock sections (Products / Machines / Capacities / Looking for) */}
         {sections.map((section) => (
           <section key={section.title} className="bg-white border border-gray-200 rounded-lg p-6">
