@@ -38,6 +38,10 @@ export async function getLatestAnswer(
   }
 }
 
+export async function getAnswer(id: string): Promise<Answer> {
+  return api.get(`/answers/${id}`);
+}
+
 export async function createAnswer(params: {
   form_id: string;
   organization_id: string;

@@ -24,9 +24,8 @@ export function OrgLayout() {
   const isRelations = useMatch({ from: '/$orgSlug/relations', shouldThrow: false });
   const isAssessments = useMatch({ from: '/$orgSlug/assessments', shouldThrow: false });
   const isCommunities = useMatch({ from: '/$orgSlug/communities', shouldThrow: false });
-  const isSettingsInformations = useMatch({ from: '/$orgSlug/settings/informations', shouldThrow: false });
   const isSettingsMembers = useMatch({ from: '/$orgSlug/settings/members', shouldThrow: false });
-  const isSettings = !!isSettingsInformations || !!isSettingsMembers;
+  const isSettings = !!isSettingsMembers;
 
   const navItems: SidebarItem[] = [
     { key: 'dashboard', label: 'Dashboard', href: `/${orgSlug}/dashboard` },
@@ -67,7 +66,7 @@ export function OrgLayout() {
             ))}
             <li>
               <Link
-                to="/$orgSlug/settings/informations"
+                to="/$orgSlug/settings/members"
                 params={{ orgSlug }}
                 className={`block px-3 py-2 text-sm rounded-md transition-colors ${
                   isSettings
@@ -77,36 +76,6 @@ export function OrgLayout() {
               >
                 Settings
               </Link>
-              {isSettings && (
-                <ul className="mt-0.5 space-y-0.5">
-                  <li>
-                    <Link
-                      to="/$orgSlug/settings/informations"
-                      params={{ orgSlug }}
-                      className={`block pl-6 pr-3 py-1.5 text-sm rounded-md transition-colors ${
-                        isSettingsInformations
-                          ? 'text-gray-900 font-medium'
-                          : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
-                      }`}
-                    >
-                      Informations
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      to="/$orgSlug/settings/members"
-                      params={{ orgSlug }}
-                      className={`block pl-6 pr-3 py-1.5 text-sm rounded-md transition-colors ${
-                        isSettingsMembers
-                          ? 'text-gray-900 font-medium'
-                          : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
-                      }`}
-                    >
-                      Members
-                    </Link>
-                  </li>
-                </ul>
-              )}
             </li>
           </ul>
 

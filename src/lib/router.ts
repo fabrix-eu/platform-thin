@@ -23,7 +23,6 @@ import { AssessmentFormPage } from '../routes/org/assessment-form';
 import { AssessmentResultsPage } from '../routes/org/assessment-results';
 import { OrgCommunitiesListPage } from '../routes/org/communities-list';
 import { OrgSettingsMembersPage } from '../routes/org/settings';
-import { OrgSettingsInformationsPage } from '../routes/org/settings-informations';
 import { CommunityLayout } from '../routes/community/layout';
 import { CommunityOverviewPage } from '../routes/community/index';
 import { CommunityMembersPage } from '../routes/community/members';
@@ -385,16 +384,10 @@ const orgSettingsIndexRoute = createRoute({
   path: '/',
   beforeLoad: ({ params }) => {
     throw redirect({
-      to: '/$orgSlug/settings/informations',
+      to: '/$orgSlug/settings/members',
       params: { orgSlug: params.orgSlug },
     });
   },
-});
-
-const orgSettingsInformationsRoute = createRoute({
-  getParentRoute: () => orgSettingsRoute,
-  path: '/informations',
-  component: OrgSettingsInformationsPage,
 });
 
 const orgSettingsMembersRoute = createRoute({
@@ -552,7 +545,6 @@ const routeTree = rootRoute.addChildren([
     orgCommunitiesRoute,
     orgSettingsRoute.addChildren([
       orgSettingsIndexRoute,
-      orgSettingsInformationsRoute,
       orgSettingsMembersRoute,
     ]),
     communityRoute.addChildren([

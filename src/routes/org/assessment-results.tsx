@@ -1,9 +1,8 @@
-import { useParams } from '@tanstack/react-router';
-import { Link } from '@tanstack/react-router';
+import { useParams, useSearch, Link } from '@tanstack/react-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getForm } from '../../lib/forms';
 import type { Form } from '../../lib/forms';
-import { getLatestAnswer, getAnswers } from '../../lib/answers';
+import { getAnswer, getLatestAnswer, getAnswers } from '../../lib/answers';
 import type { Answer } from '../../lib/answers';
 import type { User } from '../../lib/auth';
 
@@ -142,6 +141,7 @@ function ScoreCircle({ score, textColor }: { score: number; textColor: string })
 
 export function AssessmentResultsPage() {
   const { orgSlug, formId } = useParams({ strict: false }) as { orgSlug: string; formId: string };
+  const { answerId } = useSearch({ strict: false }) as { answerId?: string };
   const qc = useQueryClient();
   const me = qc.getQueryData<User>(['me']);
   const orgId = me?.organizations.find((o) => o.organization_slug === orgSlug)?.organization_id;
@@ -151,16 +151,19 @@ export function AssessmentResultsPage() {
     queryFn: () => getForm(formId),
   });
 
+  // Fetch specific answer if answerId is provided, otherwise latest
   const answerQuery = useQuery({
-    queryKey: ['answers', 'latest', orgId, formId],
-    queryFn: () => getLatestAnswer(orgId!, formId),
-    enabled: !!orgId,
+    queryKey: answerId ? ['answers', answerId] : ['answers', 'latest', orgId, formId],
+    queryFn: () => answerId ? getAnswer(answerId) : getLatestAnswer(orgId!, formId),
+    enabled: answerId ? true : !!orgId,
+    staleTime: 0,
   });
 
   const historyQuery = useQuery({
     queryKey: ['answers', 'history', orgId, formQuery.data?.id],
     queryFn: () => getAnswers(orgId!, formQuery.data!.id),
     enabled: !!orgId && !!formQuery.data,
+    staleTime: 0,
   });
 
   if (formQuery.isLoading || answerQuery.isLoading) {
@@ -286,12 +289,15 @@ export function AssessmentResultsPage() {
             {allAnswers.slice(0, 5).map((a) => {
               const aScore = Math.round(a.normalized_score || 0);
               const aCat = getScoreCategory(aScore);
-              const isLatest = a.id === answer.id;
+              const isCurrent = a.id === answer.id;
               return (
-                <div
+                <Link
                   key={a.id}
-                  className={`flex items-center justify-between p-3 rounded-lg ${
-                    isLatest ? 'bg-primary/10' : 'bg-gray-50'
+                  to="/$orgSlug/assessments/$formId/results"
+                  params={{ orgSlug, formId }}
+                  search={{ answerId: a.id }}
+                  className={`flex items-center justify-between p-3 rounded-lg transition-colors ${
+                    isCurrent ? 'bg-primary/10' : 'bg-gray-50 hover:bg-gray-100'
                   }`}
                 >
                   <div className="flex items-center gap-3">
@@ -303,14 +309,14 @@ export function AssessmentResultsPage() {
                         year: 'numeric',
                       })}
                     </span>
-                    {isLatest && (
+                    {isCurrent && (
                       <span className="px-2 py-0.5 text-[10px] font-medium rounded-full bg-gray-200 text-gray-600">
-                        Latest
+                        Current
                       </span>
                     )}
                   </div>
                   <span className={`font-bold text-sm ${aCat.textColor}`}>{aScore}%</span>
-                </div>
+                </Link>
               );
             })}
           </div>
@@ -322,6 +328,7 @@ export function AssessmentResultsPage() {
         <Link
           to="/$orgSlug/assessments/$formId"
           params={{ orgSlug, formId }}
+          search={{ new: true }}
           className="flex-1 text-center border border-border rounded-lg px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
         >
           Retake Assessment

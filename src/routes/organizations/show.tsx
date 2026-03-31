@@ -92,11 +92,11 @@ function SectionCards({ section }: { section: MockSection }) {
 }
 
 function AdminMenu({
-  orgId,
+  orgSlug,
   onDelete,
   isDeleting,
 }: {
-  orgId: string;
+  orgSlug: string;
   onDelete: () => void;
   isDeleting: boolean;
 }) {
@@ -115,13 +115,13 @@ function AdminMenu({
       {open && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 mt-1 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-20 py-1">
+          <div className="absolute right-0 mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-20 py-1">
             <Link
-              to="/organizations/$id/edit"
-              params={{ id: orgId }}
+              to="/$orgSlug/profile"
+              params={{ orgSlug }}
               className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
             >
-              Edit
+              Manage profile
             </Link>
             <button
               onClick={() => {
@@ -352,7 +352,7 @@ export function OrganizationShowPage() {
                 Message
               </button>
               <AdminMenu
-                orgId={id}
+                orgSlug={org.slug}
                 onDelete={() => deleteMutation.mutate()}
                 isDeleting={deleteMutation.isPending}
               />

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useParams, useNavigate } from '@tanstack/react-router';
+import { useParams, useNavigate, useSearch } from '@tanstack/react-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getForm, isQuestionVisible, isAnswered } from '../../lib/forms';
 import type { Form, FormQuestion, FormSection } from '../../lib/forms';
@@ -188,6 +188,7 @@ function TableInput({
 
 export function AssessmentFormPage() {
   const { orgSlug, formId } = useParams({ strict: false }) as { orgSlug: string; formId: string };
+  const { new: isRetake } = useSearch({ strict: false }) as { new?: boolean };
   const qc = useQueryClient();
   const me = qc.getQueryData<User>(['me']);
   const orgId = me?.organizations.find((o) => o.organization_slug === orgSlug)?.organization_id;
@@ -200,7 +201,7 @@ export function AssessmentFormPage() {
   const answerQuery = useQuery({
     queryKey: ['answers', 'latest', orgId, formId],
     queryFn: () => getLatestAnswer(orgId!, formId),
-    enabled: !!orgId,
+    enabled: !!orgId && !isRetake,
   });
 
   if (formQuery.isLoading || answerQuery.isLoading) {
@@ -225,7 +226,7 @@ export function AssessmentFormPage() {
   return (
     <QuestionWizard
       form={formQuery.data}
-      initialAnswer={answerQuery.data ?? null}
+      initialAnswer={isRetake ? null : (answerQuery.data ?? null)}
       organizationId={orgId!}
       orgSlug={orgSlug}
     />
@@ -244,6 +245,7 @@ function QuestionWizard({
   orgSlug: string;
 }) {
   const navigate = useNavigate();
+  const qc = useQueryClient();
   const [responses, setResponses] = useState<Record<string, unknown>>(
     initialAnswer?.responses || {},
   );
@@ -402,9 +404,12 @@ function QuestionWizard({
     } else {
       // Last question of last section — go to results
       await flush();
+      // Clear stale cache so results page fetches fresh data
+      qc.removeQueries({ queryKey: ['answers'] });
+      qc.invalidateQueries({ queryKey: ['assessments'] });
       navigate({ to: `/${orgSlug}/assessments/${form.key}/results` });
     }
-  }, [questionIdx, visibleQuestions.length, sectionIdx, allSections.length, flush, navigate, orgSlug, form.key]);
+  }, [questionIdx, visibleQuestions.length, sectionIdx, allSections.length, flush, navigate, orgSlug, form.key, qc]);
 
   useEffect(() => {
     goToNextRef.current = goToNext;
