@@ -1,4 +1,5 @@
 import { api, BASE } from './api';
+import type { Relation } from './relations';
 
 export const ORG_KINDS: Record<string, { label: string; badgeColor: string; hex: string }> = {
   brand_retailer:                        { label: 'Brand / Retailer',    badgeColor: 'bg-violet-100 text-violet-800',  hex: '#8B5CF6' },
@@ -56,7 +57,7 @@ export interface Organization {
   sector?: string | null;
   organization_photos?: { id: string; url: string; caption: string | null; position: number }[];
   communities?: OrganizationCommunity[];
-  relations?: unknown[];
+  relations?: Relation[];
   related_organizations?: Organization[];
 }
 
