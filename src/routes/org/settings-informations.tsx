@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { useParams } from '@tanstack/react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getOrganization, updateOrganization, ORG_KINDS } from '../../lib/organizations';
+import { getOrganization, updateOrganization } from '../../lib/organizations';
 import { GoogleAddressAutocomplete } from '../../components/GoogleAddressAutocomplete';
 import type { AddressData } from '../../components/GoogleAddressAutocomplete';
 import { FieldError, FormError } from '../../components/FieldError';
+import { KindSelect } from '../../components/KindSelect';
 
 export function OrgSettingsInformationsPage() {
   const { orgSlug } = useParams({ strict: false }) as { orgSlug: string };
@@ -118,19 +119,7 @@ export function OrgSettingsInformationsPage() {
           <label htmlFor="org-kind" className="block text-sm font-medium text-gray-700">
             Organization type
           </label>
-          <select
-            id="org-kind"
-            value={kind}
-            onChange={(e) => setKind(e.target.value)}
-            className="mt-1 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-ring"
-          >
-            <option value="">Select a type...</option>
-            {Object.entries(ORG_KINDS).map(([value, { label }]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
+          <KindSelect value={kind} onChange={setKind} />
           <FieldError mutation={mutation} field="kind" />
         </div>
 

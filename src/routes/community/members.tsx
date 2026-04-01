@@ -39,7 +39,7 @@ function KindBadge({ kind }: { kind: string | null }) {
   if (!kind) return null;
   const config = ORG_KINDS[kind] || ORG_KINDS.other;
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${config.color}`}>
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${config.badgeColor}`}>
       {config.label}
     </span>
   );
@@ -66,7 +66,7 @@ function OrgCard({ org, linkTo }: { org: Organization; linkTo: string }) {
             </div>
             <div className="flex items-center gap-2 mt-1">
               {kind && (
-                <span className={`inline-block text-[10px] px-1.5 py-0 rounded-full ${kind.color}`}>
+                <span className={`inline-block text-[10px] px-1.5 py-0 rounded-full ${kind.badgeColor}`}>
                   {kind.label}
                 </span>
               )}

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ORG_KINDS, ORG_KIND_COLORS } from '../lib/organizations';
+import { ORG_KINDS } from '../lib/organizations';
 
 const ALL_KINDS = Object.keys(ORG_KINDS);
 
@@ -74,7 +74,7 @@ export function MapLegend({ selectedKinds, onKindsChange }: MapLegendProps) {
         <div className="space-y-0.5">
           {ALL_KINDS.map((kindKey) => {
             const kind = ORG_KINDS[kindKey];
-            const hexColor = ORG_KIND_COLORS[kindKey] ?? '#8C9196';
+            const hexColor = kind.hex;
             const isSelected = selectedKinds.includes(kindKey);
             return (
               <button

@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import type { UseMutationResult } from '@tanstack/react-query';
-import { ORG_KINDS } from '../../lib/organizations';
 import {
   GoogleAddressAutocomplete,
   type AddressData,
 } from '../GoogleAddressAutocomplete';
 import { FormError, FieldError } from '../FieldError';
+import { KindSelect } from '../KindSelect';
 
 export interface OrgData {
   name: string;
@@ -113,20 +113,7 @@ export function OrgDetailsStep({
         >
           Organization type
         </label>
-        <select
-          id="org-kind"
-          required
-          value={kind}
-          onChange={(e) => setKind(e.target.value)}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring bg-white"
-        >
-          <option value="">Select a type...</option>
-          {Object.entries(ORG_KINDS).map(([key, info]) => (
-            <option key={key} value={key}>
-              {info.label}
-            </option>
-          ))}
-        </select>
+        <KindSelect value={kind} onChange={setKind} />
         {mutation && <FieldError mutation={mutation} field="kind" />}
       </div>
 

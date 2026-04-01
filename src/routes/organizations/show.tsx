@@ -40,7 +40,7 @@ function KindBadge({ kind }: { kind: string | null }) {
   if (!kind) return null;
   const config = ORG_KINDS[kind] || ORG_KINDS.other;
   return (
-    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${config.color}`}>
+    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${config.badgeColor}`}>
       {config.label}
     </span>
   );
@@ -489,7 +489,7 @@ export function OrganizationShowPage() {
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-gray-900 truncate">{rel.name}</p>
                       {relKind && (
-                        <span className={`inline-block text-[10px] px-1.5 py-0 rounded-full ${relKind.color}`}>
+                        <span className={`inline-block text-[10px] px-1.5 py-0 rounded-full ${relKind.badgeColor}`}>
                           {relKind.label}
                         </span>
                       )}

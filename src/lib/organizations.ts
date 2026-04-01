@@ -1,32 +1,18 @@
 import { api, BASE } from './api';
 
-export const ORG_KINDS: Record<string, { label: string; color: string }> = {
-  brand_retailer: { label: 'Brand / Retailer', color: 'bg-violet-100 text-violet-800' },
-  producer: { label: 'Producer', color: 'bg-emerald-100 text-emerald-800' },
-  facility_factory_supplier_vendor: { label: 'Facility / Supplier', color: 'bg-blue-100 text-blue-800' },
-  collector_sorter: { label: 'Collector / Sorter', color: 'bg-amber-100 text-amber-800' },
-  recycler: { label: 'Recycler', color: 'bg-teal-100 text-teal-800' },
-  academic_researcher_journalist_student: { label: 'Academic / Research', color: 'bg-indigo-100 text-indigo-800' },
-  auditor_certification_service_provider: { label: 'Auditor / Service', color: 'bg-rose-100 text-rose-800' },
-  civil_society_organization: { label: 'Civil Society', color: 'bg-orange-100 text-orange-800' },
-  multi_stakeholder_initiative: { label: 'Multi-stakeholder', color: 'bg-cyan-100 text-cyan-800' },
-  union: { label: 'Union', color: 'bg-pink-100 text-pink-800' },
-  other: { label: 'Other', color: 'bg-gray-100 text-gray-800' },
-};
-
-/** Hex colors for map markers, matching platform-front kinds.ts */
-export const ORG_KIND_COLORS: Record<string, string> = {
-  brand_retailer: '#50B83C',
-  producer: '#10B981',
-  facility_factory_supplier_vendor: '#E2725B',
-  collector_sorter: '#F59E0B',
-  recycler: '#14B8A6',
-  academic_researcher_journalist_student: '#B565A7',
-  auditor_certification_service_provider: '#4A90E2',
-  civil_society_organization: '#F5A623',
-  multi_stakeholder_initiative: '#9B51E0',
-  union: '#D0021B',
-  other: '#8C9196',
+export const ORG_KINDS: Record<string, { label: string; badgeColor: string; hex: string }> = {
+  brand_retailer:                        { label: 'Brand / Retailer',    badgeColor: 'bg-violet-100 text-violet-800',  hex: '#8B5CF6' },
+  producer:                              { label: 'Producer',            badgeColor: 'bg-emerald-100 text-emerald-800', hex: '#10B981' },
+  facility_factory_supplier_vendor:      { label: 'Facility / Supplier', badgeColor: 'bg-amber-50 text-amber-900',     hex: '#92400E' },
+  collector_sorter:                      { label: 'Collector / Sorter',  badgeColor: 'bg-amber-100 text-amber-800',    hex: '#F59E0B' },
+  designer:                              { label: 'Designer',            badgeColor: 'bg-fuchsia-100 text-fuchsia-800', hex: '#D946EF' },
+  recycler:                              { label: 'Recycler',            badgeColor: 'bg-teal-100 text-teal-800',      hex: '#14B8A6' },
+  academic_researcher_journalist_student: { label: 'Academic / Research', badgeColor: 'bg-indigo-100 text-indigo-800',  hex: '#6366F1' },
+  auditor_certification_service_provider: { label: 'Auditor / Service',  badgeColor: 'bg-rose-100 text-rose-800',      hex: '#F43F5E' },
+  civil_society_organization:            { label: 'Civil Society',       badgeColor: 'bg-orange-100 text-orange-800',  hex: '#F97316' },
+  multi_stakeholder_initiative:          { label: 'Multi-stakeholder',   badgeColor: 'bg-cyan-100 text-cyan-800',      hex: '#06B6D4' },
+  union:                                 { label: 'Union',               badgeColor: 'bg-pink-100 text-pink-800',      hex: '#EC4899' },
+  other:                                 { label: 'Other',               badgeColor: 'bg-gray-100 text-gray-800',      hex: '#6B7280' },
 };
 
 export interface OrganizationCommunity {
@@ -72,6 +58,17 @@ export interface Organization {
   communities?: OrganizationCommunity[];
   relations?: unknown[];
   related_organizations?: Organization[];
+}
+
+export interface OrganizationBasic {
+  id: string;
+  name: string;
+  kind: string;
+  address: string;
+  image_url: string | null;
+  lon: number;
+  lat: number;
+  claimed: boolean;
 }
 
 interface OrganizationsResponse {
@@ -122,17 +119,6 @@ export async function updateOrganization(id: string, data: Record<string, unknow
 
 export async function deleteOrganization(id: string): Promise<void> {
   return api.delete(`/organizations/${id}`);
-}
-
-export interface OrganizationBasic {
-  id: string;
-  name: string;
-  kind: string;
-  address: string;
-  image_url: string | null;
-  lon: number;
-  lat: number;
-  claimed: boolean;
 }
 
 export async function searchOrganizations(q: string): Promise<OrganizationBasic[]> {

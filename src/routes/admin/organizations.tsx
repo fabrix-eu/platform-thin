@@ -28,7 +28,7 @@ export function AdminOrganizationsPage() {
         if (!row.kind) return <span className="text-gray-400">-</span>;
         const kind = ORG_KINDS[row.kind];
         return kind ? (
-          <span className={`inline-block px-2 py-0.5 rounded text-xs ${kind.color}`}>{kind.label}</span>
+          <span className={`inline-block px-2 py-0.5 rounded text-xs ${kind.badgeColor}`}>{kind.label}</span>
         ) : (
           <span className="text-gray-500">{row.kind}</span>
         );

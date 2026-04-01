@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import type { Organization } from '../lib/organizations';
-import { ORG_KIND_COLORS } from '../lib/organizations';
+import { ORG_KINDS } from '../lib/organizations';
 
 const MAP_STYLE = 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json';
 
@@ -13,7 +13,7 @@ interface OrganizationsMapProps {
 }
 
 function getKindColor(org: { kind: string | null }): string {
-  return ORG_KIND_COLORS[org.kind ?? ''] ?? '#8C9196';
+  return ORG_KINDS[org.kind ?? '']?.hex ?? '#6B7280';
 }
 
 export function OrganizationsMap({ organizations, height = '500px', selectedKinds }: OrganizationsMapProps) {

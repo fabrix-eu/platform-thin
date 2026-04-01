@@ -173,7 +173,7 @@ export function OrgSwitcher() {
                     <div className="flex-1 min-w-0">
                       <div className="truncate">{org.organization_name}</div>
                       {kind && (
-                        <span className={`inline-block text-[10px] px-1.5 py-0 rounded-full ${kind.color}`}>
+                        <span className={`inline-block text-[10px] px-1.5 py-0 rounded-full ${kind.badgeColor}`}>
                           {kind.label}
                         </span>
                       )}

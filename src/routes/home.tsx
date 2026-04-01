@@ -42,7 +42,7 @@ function OrgCard({ org }: { org: MeOrganization }) {
               </svg>
             </div>
             {kind && (
-              <span className={`inline-block text-[10px] px-1.5 py-0 rounded-full mt-1 ${kind.color}`}>
+              <span className={`inline-block text-[10px] px-1.5 py-0 rounded-full mt-1 ${kind.badgeColor}`}>
                 {kind.label}
               </span>
             )}

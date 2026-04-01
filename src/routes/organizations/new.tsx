@@ -212,7 +212,7 @@ function ClaimStep({
         <div className="flex-1">
           <h3 className="font-semibold text-gray-900">{org.name}</h3>
           <span
-            className={`inline-block text-xs font-medium px-2 py-0.5 rounded-full mt-1 ${kindInfo.color}`}
+            className={`inline-block text-xs font-medium px-2 py-0.5 rounded-full mt-1 ${kindInfo.badgeColor}`}
           >
             {kindInfo.label}
           </span>

@@ -156,7 +156,7 @@ export function OrgSearchStep({ onCreateNew, onClaimOrg }: OrgSearchStepProps) {
                   )}
                 </div>
                 <span
-                  className={`text-[10px] font-medium px-2 py-0.5 rounded-full shrink-0 ${kindInfo.color}`}
+                  className={`text-[10px] font-medium px-2 py-0.5 rounded-full shrink-0 ${kindInfo.badgeColor}`}
                 >
                   {kindInfo.label}
                 </span>

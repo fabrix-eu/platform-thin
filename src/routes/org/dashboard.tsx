@@ -37,7 +37,7 @@ export function OrgDashboardPage() {
             {organization.name}
           </h1>
           {kind && (
-            <span className={`inline-block text-xs px-2 py-0.5 rounded-full ${kind.color}`}>
+            <span className={`inline-block text-xs px-2 py-0.5 rounded-full ${kind.badgeColor}`}>
               {kind.label}
             </span>
           )}
