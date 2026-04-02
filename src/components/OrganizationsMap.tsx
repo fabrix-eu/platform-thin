@@ -10,13 +10,14 @@ interface OrganizationsMapProps {
   organizations: Organization[];
   height?: string;
   selectedKinds: string[];
+  linkBuilder?: (org: { id: string; slug: string }) => string;
 }
 
 function getKindColor(org: { kind: string | null }): string {
   return ORG_KINDS[org.kind ?? '']?.hex ?? '#6B7280';
 }
 
-export function OrganizationsMap({ organizations, height = '500px', selectedKinds }: OrganizationsMapProps) {
+export function OrganizationsMap({ organizations, height = '500px', selectedKinds, linkBuilder }: OrganizationsMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mapRef = useRef<any>(null);
@@ -112,6 +113,10 @@ export function OrganizationsMap({ organizations, height = '500px', selectedKind
         const coords = feature.geometry.coordinates.slice();
         const p = feature.properties;
 
+        const link = linkBuilder
+          ? linkBuilder({ id: p?.id, slug: p?.slug })
+          : `/organizations/${p?.slug || p?.id}`;
+
         popupRef.current?.remove();
         popupRef.current = new maplibregl.Popup({ offset: 12, closeButton: true, maxWidth: '300px' })
           .setLngLat(coords)
@@ -122,7 +127,7 @@ export function OrganizationsMap({ organizations, height = '500px', selectedKind
                 <strong style="font-size:13px">${p?.name || 'Unknown'}</strong>
               </div>
               ${p?.address ? `<p style="font-size:12px;color:#666;margin-bottom:8px">${p.address}</p>` : ''}
-              <a href="/organizations/${p?.slug || p?.id}" style="font-size:12px;color:#6d28d9">View details →</a>
+              <a href="${link}" style="font-size:12px;color:#6d28d9">View details →</a>
             </div>
           `)
           .addTo(map);
