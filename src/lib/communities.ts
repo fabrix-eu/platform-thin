@@ -14,6 +14,7 @@ export interface Community {
   created_at: string;
   updated_at: string;
   is_member?: boolean;
+  created_by?: { id: string; name: string; email: string };
 }
 
 interface PaginatedResponse {

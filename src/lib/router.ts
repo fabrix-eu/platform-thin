@@ -34,6 +34,7 @@ import { CommunityEventEditPage } from '../routes/community/event-edit';
 import { CommunityChallengesListPage } from '../routes/community/challenges';
 import { CommunityMatchmakingPage } from '../routes/community/matchmaking';
 import { CommunityJoinRequestsPage } from '../routes/community/join-requests';
+import { CommunitySettingsPage } from '../routes/community/settings';
 import { MapPage } from '../routes/map';
 import { CommunitiesPage } from '../routes/communities';
 import { CommunityShowPage } from '../routes/communities/show';
@@ -474,6 +475,12 @@ const communityJoinRequestsRoute = createRoute({
   component: CommunityJoinRequestsPage,
 });
 
+const communitySettingsRoute = createRoute({
+  getParentRoute: () => communityRoute,
+  path: '/settings',
+  component: CommunitySettingsPage,
+});
+
 // ── Admin ────────────────────────────────────────────────────
 
 const adminRoute = createRoute({
@@ -579,6 +586,7 @@ const routeTree = rootRoute.addChildren([
       communityChallengesRoute,
       communityMatchmakingRoute,
       communityJoinRequestsRoute,
+      communitySettingsRoute,
     ]),
   ]),
 ]);

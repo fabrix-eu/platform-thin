@@ -27,7 +27,10 @@ export function CommunityLayout() {
     { key: 'events', label: 'Events', path: `${basePath}/events` },
     { key: 'challenges', label: 'Challenges', path: `${basePath}/challenges` },
     { key: 'matchmaking', label: 'Matchmaking', path: `${basePath}/matchmaking` },
-    ...(isAdmin ? [{ key: 'join-requests', label: 'Join Requests', path: `${basePath}/join-requests` }] : []),
+    ...(isAdmin ? [
+      { key: 'join-requests', label: 'Join Requests', path: `${basePath}/join-requests` },
+      { key: 'settings', label: 'Settings', path: `${basePath}/settings` },
+    ] : []),
   ];
 
   // Detect active tab from URL
