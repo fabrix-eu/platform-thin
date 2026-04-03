@@ -34,3 +34,32 @@ export async function removeCommunityAdmin(
 ): Promise<void> {
   await api.delete(`/communities/${communityId}/community_admins/${adminId}`);
 }
+
+export interface AdminInvitation {
+  id: string;
+  email: string;
+  status: string;
+  expires_at: string;
+  created_at: string;
+  invited_by: { id: string; name: string; email: string };
+}
+
+export async function getAdminInvitations(
+  communityId: string,
+): Promise<AdminInvitation[]> {
+  return api.get(`/communities/${communityId}/admin_invitations`);
+}
+
+export async function cancelAdminInvitation(
+  communityId: string,
+  invitationId: string,
+): Promise<void> {
+  await api.delete(`/communities/${communityId}/admin_invitations/${invitationId}`);
+}
+
+export async function resendAdminInvitation(
+  communityId: string,
+  invitationId: string,
+): Promise<AdminInvitation> {
+  return api.post(`/communities/${communityId}/admin_invitations/${invitationId}/resend`, {});
+}

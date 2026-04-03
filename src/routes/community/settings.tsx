@@ -7,8 +7,11 @@ import {
   getCommunityAdmins,
   addCommunityAdmin,
   removeCommunityAdmin,
+  getAdminInvitations,
+  cancelAdminInvitation,
+  resendAdminInvitation,
 } from '../../lib/community-admins';
-import type { CommunityAdmin } from '../../lib/community-admins';
+import type { CommunityAdmin, AdminInvitation } from '../../lib/community-admins';
 
 function AdminAvatar({ admin }: { admin: CommunityAdmin }) {
   const user = admin.user;
@@ -68,7 +71,7 @@ function AddAdminModal({
         <form onSubmit={handleSubmit}>
           <div className="p-4 space-y-3">
             <p className="text-xs text-gray-500">
-              The user must already have an account on the platform. They will get immediate admin access.
+              If the user has an account, they'll be added immediately. Otherwise, an invitation email will be sent.
             </p>
             <input
               type="email"
@@ -134,6 +137,11 @@ export function CommunitySettingsPage() {
     queryFn: () => getCommunityAdmins(communitySlug),
   });
 
+  const invitationsQuery = useQuery({
+    queryKey: ['admin_invitations', communitySlug],
+    queryFn: () => getAdminInvitations(communitySlug),
+  });
+
   const removeMutation = useMutation({
     mutationFn: (adminId: string) => removeCommunityAdmin(communitySlug, adminId),
     onSuccess: () => {
@@ -141,11 +149,32 @@ export function CommunitySettingsPage() {
     },
   });
 
+  const cancelMutation = useMutation({
+    mutationFn: (invitationId: string) => cancelAdminInvitation(communitySlug, invitationId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin_invitations', communitySlug] });
+    },
+  });
+
+  const resendMutation = useMutation({
+    mutationFn: (invitationId: string) => resendAdminInvitation(communitySlug, invitationId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin_invitations', communitySlug] });
+    },
+  });
+
   const admins = adminsQuery.data ?? [];
+  const invitations = invitationsQuery.data ?? [];
 
   function handleRemove(admin: CommunityAdmin) {
     if (window.confirm(`Remove ${admin.user.name} as admin?`)) {
       removeMutation.mutate(admin.id);
+    }
+  }
+
+  function handleCancelInvitation(inv: AdminInvitation) {
+    if (window.confirm(`Cancel invitation to ${inv.email}?`)) {
+      cancelMutation.mutate(inv.id);
     }
   }
 
@@ -252,12 +281,59 @@ export function CommunitySettingsPage() {
         )}
       </section>
 
+      {/* Pending invitations */}
+      {invitations.length > 0 && (
+        <section className="bg-white border border-border rounded-lg p-5">
+          <h3 className="text-sm font-semibold text-gray-900 mb-3">Pending invitations</h3>
+          <div className="divide-y divide-border">
+            {invitations.map((inv) => (
+              <div key={inv.id} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
+                <div className="w-9 h-9 rounded-full bg-gray-100 text-gray-400 flex items-center justify-center">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
+                  </svg>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-gray-900 truncate">{inv.email}</p>
+                  <p className="text-xs text-gray-500">
+                    Invited {new Date(inv.created_at).toLocaleDateString('en-GB')}
+                  </p>
+                </div>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => resendMutation.mutate(inv.id)}
+                    disabled={resendMutation.isPending}
+                    className="px-2 py-1 text-xs text-gray-600 hover:text-gray-900 transition-colors disabled:opacity-50"
+                    title="Resend invitation"
+                  >
+                    Resend
+                  </button>
+                  <button
+                    onClick={() => handleCancelInvitation(inv)}
+                    disabled={cancelMutation.isPending}
+                    className="p-1.5 text-gray-400 hover:text-red-600 transition-colors disabled:opacity-50"
+                    title="Cancel invitation"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* Add admin modal */}
       {showAddModal && (
         <AddAdminModal
           communitySlug={communitySlug}
           onClose={() => setShowAddModal(false)}
-          onAdded={() => queryClient.invalidateQueries({ queryKey: ['community_admins', communitySlug] })}
+          onAdded={() => {
+            queryClient.invalidateQueries({ queryKey: ['community_admins', communitySlug] });
+            queryClient.invalidateQueries({ queryKey: ['admin_invitations', communitySlug] });
+          }}
         />
       )}
     </div>
