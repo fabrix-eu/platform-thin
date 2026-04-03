@@ -192,7 +192,7 @@ function EventCard({ event }: { event: { title: string; happens_at: string; addr
 
 // --- Challenge card ---
 
-function ChallengeCard({ challenge }: { challenge: { title: string; state: string; end_on: string; applications_count: number } }) {
+function ChallengeCard({ challenge }: { challenge: { title: string; state: string; end_on: string | null; applications_count: number } }) {
   const stateColors: Record<string, string> = {
     active: 'bg-green-100 text-green-700',
     draft: 'bg-gray-100 text-gray-600',
@@ -209,7 +209,7 @@ function ChallengeCard({ challenge }: { challenge: { title: string; state: strin
         </span>
       </div>
       <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
-        <span>Ends {new Date(challenge.end_on).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>
+        {challenge.end_on && <span>Ends {new Date(challenge.end_on).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>}
         <span>{challenge.applications_count} application{challenge.applications_count !== 1 ? 's' : ''}</span>
       </div>
     </div>
