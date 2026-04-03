@@ -1,4 +1,4 @@
-import { Link, Outlet, useParams, useMatch } from '@tanstack/react-router';
+import { Link, Outlet, useParams, useLocation } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { getMe } from '../../lib/auth';
 
@@ -13,6 +13,8 @@ export function CommunityLayout() {
     orgSlug: string;
     communitySlug: string;
   };
+
+  const { pathname } = useLocation();
 
   const meQuery = useQuery({ queryKey: ['me'], queryFn: getMe });
   const isAdmin = meQuery.data?.accessible_communities?.some(
@@ -33,15 +35,9 @@ export function CommunityLayout() {
     ] : []),
   ];
 
-  // Detect active tab from URL
-  const isIndex = useMatch({
-    from: '/$orgSlug/communities/$communitySlug/',
-    shouldThrow: false,
-  });
-
   function isActive(tab: TabItem) {
-    if (tab.key === 'overview') return !!isIndex;
-    return location.pathname.startsWith(tab.path);
+    if (tab.key === 'overview') return pathname === basePath || pathname === `${basePath}/`;
+    return pathname.startsWith(tab.path);
   }
 
   return (
