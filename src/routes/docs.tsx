@@ -1,5 +1,7 @@
 import { useState } from 'react';
 
+const S3_BASE = 'https://mantel-dev.s3.nl-ams.scw.cloud/docs';
+
 type Section =
   | 'getting-started'
   | 'home'
@@ -14,7 +16,8 @@ type Section =
   | 'community-members'
   | 'community-events'
   | 'community-challenges'
-  | 'community-matchmaking';
+  | 'community-matchmaking'
+  | 'notifications';
 
 interface NavGroup {
   title: string;
@@ -32,6 +35,7 @@ const NAV: NavGroup[] = [
       { key: 'home', label: 'Home' },
       { key: 'directory', label: 'Directory' },
       { key: 'map', label: 'Interactive Map' },
+      { key: 'notifications', label: 'Notifications' },
     ],
   },
   {
@@ -85,6 +89,19 @@ function Feature({
     <div className="mb-5">
       <h3 className="text-sm font-semibold text-gray-800 mb-1.5">{title}</h3>
       <div className="text-sm text-gray-600 leading-relaxed">{children}</div>
+    </div>
+  );
+}
+
+function Screenshot({ src, alt }: { src: string; alt: string }) {
+  return (
+    <div className="my-5 rounded-lg overflow-hidden border border-gray-200 shadow-sm">
+      <img
+        src={`${S3_BASE}/${src}`}
+        alt={alt}
+        className="w-full"
+        loading="lazy"
+      />
     </div>
   );
 }
@@ -172,16 +189,24 @@ function HomeContent() {
         The home page adapts to whether you are signed in or not.
       </P>
 
+      <Screenshot src="fabrix-home.png" alt="Fabrix home page" />
+
       <Feature title="Not signed in">
         You see a landing page inviting you to create an account or sign in.
         This is the entry point for new users discovering Fabrix.
       </Feature>
 
       <Feature title="Signed in">
-        You see all the organizations linked to your account displayed as cards.
-        Each card shows the organization name, type, number of relations,
-        assessment progress, and communities joined. Click on any card to jump
-        straight into that organization&apos;s dashboard.
+        You see your communities, pending actions, and all the organizations
+        linked to your account displayed as cards. Each card shows the
+        organization name, type, number of relations, assessment progress, and
+        communities joined. Click on any card to jump straight into that
+        organization&apos;s dashboard.
+      </Feature>
+
+      <Feature title="Pending actions">
+        The home page highlights any actions waiting for your attention — join
+        requests to review, pending invitations, and more.
       </Feature>
 
       <Tip>
@@ -201,6 +226,8 @@ function DirectoryContent() {
         The directory is the central place to discover all organizations
         registered on Fabrix. It is accessible from the Explorer sidebar.
       </P>
+
+      <Screenshot src="fabrix-directory.png" alt="Organization directory" />
 
       <Feature title="Search">
         Use the search bar at the top to find organizations by name. Results
@@ -261,6 +288,39 @@ function MapContent() {
   );
 }
 
+function NotificationsContent() {
+  return (
+    <div>
+      <SectionTitle>Notifications</SectionTitle>
+      <P>
+        Stay informed about activity related to your organizations and
+        communities.
+      </P>
+
+      <Screenshot src="fabrix-notifications.png" alt="Notifications page" />
+
+      <Feature title="Notification bell">
+        The bell icon in the top-right corner shows your unread count. Click it
+        to preview the latest notifications without leaving your current page.
+      </Feature>
+
+      <Feature title="Full notifications page">
+        Browse all your notifications in one place. Mark individual notifications
+        as read, or use &ldquo;Mark all as read&rdquo; to clear everything.
+      </Feature>
+
+      <Feature title="Types of notifications">
+        <ul className="list-disc list-inside mt-1 space-y-1">
+          <li>Join requests for your organization or community</li>
+          <li>New community events and challenges</li>
+          <li>Application status updates on challenges</li>
+          <li>New members joining your community</li>
+        </ul>
+      </Feature>
+    </div>
+  );
+}
+
 function OrgDashboardContent() {
   return (
     <div>
@@ -269,6 +329,8 @@ function OrgDashboardContent() {
         The dashboard is your organization&apos;s home page. It gives you a
         quick overview of your activity on Fabrix.
       </P>
+
+      <Screenshot src="fabrix-dashboard.png" alt="Organization dashboard" />
 
       <Feature title="Overview cards">
         Three cards summarize your organization&apos;s engagement:
@@ -288,6 +350,11 @@ function OrgDashboardContent() {
         </ul>
       </Feature>
 
+      <Feature title="Community shortcuts">
+        Your communities are listed in the sidebar for quick access. Click any
+        community to jump directly into it.
+      </Feature>
+
       <Tip>
         Use the dropdown in the top-left corner to switch between your
         organizations at any time.
@@ -305,22 +372,28 @@ function OrgProfileContent() {
         discover you in the directory or on the map.
       </P>
 
-      <Feature title="What&apos;s on your profile">
+      <Screenshot src="fabrix-profile.png" alt="Organization profile editing" />
+
+      <Feature title="Multi-section management">
+        The profile is organized into sections:
         <ul className="list-disc list-inside mt-1 space-y-1">
-          <li>Cover image and logo</li>
-          <li>Organization name and type</li>
-          <li>Address and location</li>
-          <li>Description of your activity</li>
-          <li>Contact information (website, email, phone)</li>
-          <li>Communities you belong to</li>
-          <li>Related organizations</li>
+          <li><strong>Informations</strong> — name, type, address, description, contact</li>
+          <li><strong>Data</strong> — number of employees, annual turnover</li>
+          <li><strong>Photos</strong> — image gallery with upload to cloud storage</li>
+          <li><strong>Products</strong> — your product catalog</li>
+          <li><strong>Services & Skills</strong> — what you offer</li>
         </ul>
       </Feature>
 
-      <Feature title="Editing your profile">
-        Go to your organization profile and click &ldquo;Edit&rdquo; to update
-        any information. Make sure your address is accurate — it determines
-        your position on the map.
+      <Feature title="Address verification">
+        Your address is verified with Google Maps autocomplete. The selected
+        location determines your position on the interactive map.
+      </Feature>
+
+      <Feature title="Public profile">
+        Click &ldquo;View public profile&rdquo; to see how other users see your
+        organization — with cover image, description, communities, and related
+        organizations.
       </Feature>
 
       <Tip>
@@ -340,18 +413,20 @@ function OrgRelationsContent() {
         work with as partners, suppliers, or clients.
       </P>
 
-      <Feature title="For organizations">
-        Build your supply chain network by connecting with partners. Your
-        relations are visible on your public profile and help others understand
-        your position in the ecosystem.
+      <Feature title="Interactive map">
+        Your relations are displayed on a map centered on your organization&apos;s
+        location. See where your partners are located at a glance.
+      </Feature>
+
+      <Feature title="Searchable list">
+        Below the map, browse all your relations in a searchable, paginated list.
+        See each partner&apos;s name, type, and location.
       </Feature>
 
       <Feature title="For facilitators">
         Track connections between organizations in your territory. Monitor how
         the local supply chain network is growing and identify gaps.
       </Feature>
-
-      <ComingSoon />
     </div>
   );
 }
@@ -366,19 +441,30 @@ function OrgAssessmentsContent() {
         responsibility practices.
       </P>
 
-      <Feature title="For organizations">
-        Complete assessments to measure where you stand on key sustainability
-        criteria. Your results feed into your public profile and help
-        facilitators understand how to support you.
+      <Screenshot src="fabrix-assessments.png" alt="Impact Compass assessments" />
+
+      <Feature title="Assessment overview">
+        See all available assessment forms at a glance, with a radar chart
+        showing your overall scores across all dimensions. Completed assessments
+        display score cards with your results.
       </Feature>
 
-      <Feature title="For facilitators">
-        Monitor assessment completion across your community. Use the data to
-        identify where organizations need the most support and track progress
-        over time.
+      <Feature title="Assessment wizard">
+        Answer questions one at a time in a guided wizard. Your progress is
+        saved automatically so you can pause and come back later. Some questions
+        have conditional follow-ups based on your answers.
       </Feature>
 
-      <ComingSoon />
+      <Feature title="Results and history">
+        After completing an assessment, view a detailed breakdown with score
+        circles, section-by-section analysis, and recommendations. You can also
+        see your history of past submissions to track your progress over time.
+      </Feature>
+
+      <Tip>
+        Completing all assessments gives you a comprehensive view of your
+        circularity practices and helps facilitators understand how to support you.
+      </Tip>
     </div>
   );
 }
@@ -390,6 +476,8 @@ function OrgSettingsContent() {
       <P>
         Manage who has access to your organization on Fabrix.
       </P>
+
+      <Screenshot src="fabrix-settings.png" alt="Organization settings and members" />
 
       <Feature title="Members">
         View all members of your organization with their name, email, and role.
@@ -406,10 +494,15 @@ function OrgSettingsContent() {
         </ul>
       </Feature>
 
+      <Feature title="Join requests">
+        When someone requests to join your organization, you can review and
+        accept or decline from this page.
+      </Feature>
+
       <Feature title="Invite people">
         Owners can invite new members by email. Choose the role (Member or Owner)
-        when sending the invitation. Pending invitations can be cancelled before
-        they are accepted.
+        when sending the invitation. Pending invitations are displayed and can be
+        cancelled before they are accepted.
       </Feature>
 
       <Feature title="Change roles">
@@ -430,19 +523,34 @@ function CommunityOverviewContent() {
         focus in circular textile.
       </P>
 
+      <Screenshot src="fabrix-communities.png" alt="Communities explorer" />
+
       <Feature title="What communities offer">
         <ul className="list-disc list-inside mt-1 space-y-1">
           <li>A shared space to discover and connect with other members</li>
+          <li>An interactive map of all community members</li>
           <li>Events organized by facilitators (workshops, meetups, webinars)</li>
           <li>Challenges to find partners and drive innovation</li>
+          <li>Discussion spaces for community conversations</li>
           <li>Matchmaking to connect with the right organizations</li>
         </ul>
+      </Feature>
+
+      <Feature title="Community overview page">
+        When you enter a community, you see an overview with a map of all
+        members, recent events, active challenges, and the latest discussions —
+        everything at a glance.
       </Feature>
 
       <Feature title="Accessing a community">
         Communities are always accessed through your organization. Use the
         &ldquo;Communities&rdquo; section in your organization sidebar to see
         which communities you belong to, then click to enter.
+      </Feature>
+
+      <Feature title="Browse and join">
+        Explore public communities from the Communities page in the Explorer.
+        Request to join a community — admins will review your request.
       </Feature>
     </div>
   );
@@ -456,17 +564,25 @@ function CommunityMembersContent() {
         Browse all organizations that are part of this community.
       </P>
 
-      <Feature title="For organizations">
-        Discover other organizations in your community. See their profiles, what
-        they do, and where they are located.
+      <Screenshot src="fabrix-community-members.png" alt="Community members directory" />
+
+      <Feature title="Member directory">
+        Search and browse all community members. Toggle between list and card
+        views, and use pagination to navigate through large communities.
+      </Feature>
+
+      <Feature title="Member detail">
+        Click on any member to view their full profile within the community
+        context — cover image, description, communities, and related
+        organizations.
       </Feature>
 
       <Feature title="For facilitators">
-        Grow your network by inviting organizations and managing membership.
-        Track how the community is developing over time.
+        Community admins see a sticky sidebar on member detail pages with
+        editable notes, member info, and management actions. Add organizations
+        to the community via a search modal, or remove members from their
+        detail page.
       </Feature>
-
-      <ComingSoon />
     </div>
   );
 }
@@ -476,20 +592,26 @@ function CommunityEventsContent() {
     <div>
       <SectionTitle>Events</SectionTitle>
       <P>
-        Community events are organized by facilitators to bring members together.
+        Community events bring members together — workshops, meetups, webinars,
+        and more.
       </P>
 
-      <Feature title="For organizations">
-        Attend workshops, meetups, and webinars. Learn from peers, network, and
-        collaborate on shared challenges.
+      <Screenshot src="fabrix-community-events.png" alt="Community events" />
+
+      <Feature title="Event list">
+        Browse upcoming and past events. Each event card shows the title, date,
+        time, and location (or &ldquo;Online&rdquo; for virtual events).
       </Feature>
 
-      <Feature title="For facilitators">
-        Create and manage events for your community. Organize workshops, training
-        sessions, or networking events to support your members.
+      <Feature title="RSVP">
+        Respond to events with Going, Maybe, or Not Going. See the list of
+        participants who have RSVP&apos;d.
       </Feature>
 
-      <ComingSoon />
+      <Feature title="Event management">
+        Community admins can create, edit, and delete events. Set the title,
+        description, date, location, and optionally upload an image.
+      </Feature>
     </div>
   );
 }
@@ -499,21 +621,41 @@ function CommunityChallengesContent() {
     <div>
       <SectionTitle>Challenges</SectionTitle>
       <P>
-        Challenges are calls for participation managed by facilitators to solve
-        specific problems or find partners.
+        Challenges are calls for participation where any community member can
+        post a challenge, review applications, and select winners.
       </P>
 
-      <Feature title="For organizations">
-        Apply to challenges that match your capabilities. Showcase what you can
-        offer and find new business opportunities.
+      <Screenshot src="fabrix-community-challenges.png" alt="Community challenges" />
+
+      <Feature title="Browse challenges">
+        See all active and completed challenges in your community. Each
+        challenge card shows the title, status, end date, and number of
+        applications received.
       </Feature>
 
-      <Feature title="For facilitators">
-        Launch challenges to find the right partners for specific needs. Drive
-        innovation and connect supply and demand within your community.
+      <Feature title="Create a challenge">
+        Any community member can create a challenge. Set the title, description,
+        number of winners, dates, and optionally upload an image. Challenges
+        start as a draft and can be activated when ready.
       </Feature>
 
-      <ComingSoon />
+      <Feature title="Apply to challenges">
+        Browse active challenges and submit your application with a note
+        explaining why your organization is a good fit. Optionally attach a
+        file if the challenge requires it.
+      </Feature>
+
+      <Feature title="Review applications">
+        Challenge owners and community admins can review applications — accept,
+        reject, or select winners. When all winner spots are filled, the
+        challenge is automatically completed.
+      </Feature>
+
+      <Tip>
+        Challenges are a great way to find partners for specific needs. Whether
+        you&apos;re looking for a recycling partner, a design collaborator, or a
+        supply chain connection — post a challenge and let the community respond.
+      </Tip>
     </div>
   );
 }
@@ -548,6 +690,7 @@ const CONTENT: Record<Section, () => React.ReactNode> = {
   home: HomeContent,
   directory: DirectoryContent,
   map: MapContent,
+  notifications: NotificationsContent,
   'org-dashboard': OrgDashboardContent,
   'org-profile': OrgProfileContent,
   'org-relations': OrgRelationsContent,
