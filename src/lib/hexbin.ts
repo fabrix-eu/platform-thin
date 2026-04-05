@@ -4,7 +4,7 @@ export interface HexbinData {
   lat: number;
   lng: number;
   count: number;
-  companies: Array<{ business_name: string }>;
+  companies: Array<{ name: string }>;
 }
 
 function latLngToHexCoords(lat: number, lng: number, hexRadius: number): [number, number] {
@@ -60,7 +60,7 @@ export function aggregateToHexbins(
   companies: Array<{
     latitude: number;
     longitude: number;
-    business_name: string;
+    name: string;
     categories: Array<{ slug: string }>;
   }>,
   hexRadius: number,

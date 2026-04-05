@@ -49,6 +49,7 @@ export const ROTTERDAM_CONFIG = {
   minBubblePoints: 10,
   center: { lat: 51.9244, lng: 4.4777 } as const,
   zoom: 11,
+  hexbinRadius: 500,
 };
 
 export const ATHENS_CONFIG = {

@@ -127,10 +127,12 @@ function AthensMap({
   companies,
   selectedCategories,
   loading,
+  hexbin,
 }: {
   companies: AthensCompany[];
   selectedCategories: string[];
   loading: boolean;
+  hexbin: boolean;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -169,23 +171,32 @@ function AthensMap({
     };
   }, []);
 
-  const updateLayers = useCallback(() => {
+  const cleanLayers = useCallback(() => {
     const m = mapRef.current;
-    if (!m || !mapLoaded) return;
-
-    // Clean existing layers
+    if (!m) return;
     const style = m.getStyle();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     style.layers?.forEach((l: any) => {
-      if (l.id.startsWith('hexbin-') && m.getLayer(l.id)) m.removeLayer(l.id);
+      if (
+        l.id.startsWith('cluster-') ||
+        l.id.startsWith('unclustered-') ||
+        l.id.startsWith('hexbin-')
+      ) {
+        if (m.getLayer(l.id)) m.removeLayer(l.id);
+      }
     });
     Object.keys(style.sources ?? {}).forEach((s) => {
-      if (s.startsWith('hexbin-') && m.getSource(s)) m.removeSource(s);
+      if ((s.startsWith('companies-') || s.startsWith('hexbin-')) && m.getSource(s))
+        m.removeSource(s);
     });
+  }, []);
 
+  const updateLayers = useCallback(() => {
+    const m = mapRef.current;
+    if (!m || !mapLoaded) return;
+    cleanLayers();
     if (selectedCategories.length === 0 || companies.length === 0) return;
 
-    // Build category map
     const categoryMap = new Map<string, { name: string; color: string }>();
     companies.forEach((c) =>
       c.categories.forEach((cat) => {
@@ -194,98 +205,186 @@ function AthensMap({
       }),
     );
 
-    categoryMap.forEach((info, slug) => {
-      const hexbins = aggregateToHexbins(
-        companies,
-        ATHENS_CONFIG.hexbinRadius,
-        slug,
-        ATHENS_CONFIG.center.lat,
-        5,
-      );
-      if (hexbins.length === 0) return;
+    if (hexbin) {
+      // ── Hexbin mode ──
+      categoryMap.forEach((info, slug) => {
+        const mapped = companies.map((c) => ({
+          latitude: c.latitude,
+          longitude: c.longitude,
+          name: c.business_name,
+          categories: c.categories,
+        }));
+        const hexbins = aggregateToHexbins(
+          mapped,
+          ATHENS_CONFIG.hexbinRadius,
+          slug,
+          ATHENS_CONFIG.center.lat,
+          5,
+        );
+        if (hexbins.length === 0) return;
 
-      const sourceId = `hexbin-${slug}`;
-      const geojson: GeoJSON.FeatureCollection = {
-        type: 'FeatureCollection',
-        features: hexbins.map((h) => ({
-          type: 'Feature' as const,
-          geometry: { type: 'Point' as const, coordinates: [h.lng, h.lat] },
-          properties: {
-            count: h.count,
-            categoryName: info.name,
-            color: info.color,
-            companyNames: h.companies
-              .map((c) => c.business_name)
-              .slice(0, 5)
-              .join(', '),
-            totalCompanies: h.count,
+        const sourceId = `hexbin-${slug}`;
+        m.addSource(sourceId, {
+          type: 'geojson',
+          data: {
+            type: 'FeatureCollection',
+            features: hexbins.map((h) => ({
+              type: 'Feature' as const,
+              geometry: { type: 'Point' as const, coordinates: [h.lng, h.lat] },
+              properties: {
+                count: h.count,
+                categoryName: info.name,
+                color: info.color,
+                companyNames: h.companies.map((c) => c.name).slice(0, 5).join(', '),
+                totalCompanies: h.count,
+              },
+            })),
           },
-        })),
-      };
+        });
 
-      m.addSource(sourceId, { type: 'geojson', data: geojson });
+        m.addLayer({
+          id: `hexbin-${slug}`,
+          type: 'circle',
+          source: sourceId,
+          paint: {
+            'circle-color': info.color,
+            'circle-radius': ['+', 10, ['*', ['sqrt', ['get', 'count']], 2]],
+            'circle-opacity': 0.7,
+            'circle-stroke-width': 2,
+            'circle-stroke-color': '#ffffff',
+          },
+        });
+        m.addLayer({
+          id: `hexbin-label-${slug}`,
+          type: 'symbol',
+          source: sourceId,
+          layout: {
+            'text-field': ['get', 'count'],
+            'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
+            'text-size': 11,
+          },
+          paint: { 'text-color': '#ffffff' },
+        });
 
-      // Hexbin circles
-      m.addLayer({
-        id: `hexbin-${slug}`,
-        type: 'circle',
-        source: sourceId,
-        paint: {
-          'circle-color': info.color,
-          'circle-radius': ['+', 10, ['*', ['sqrt', ['get', 'count']], 2]],
-          'circle-opacity': 0.7,
-          'circle-stroke-width': 2,
-          'circle-stroke-color': '#ffffff',
-        },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        m.on('click', `hexbin-${slug}`, (e: any) => {
+          if (!e.features?.[0]) return;
+          const coords = e.features[0].geometry.coordinates.slice();
+          const p = e.features[0].properties;
+          const more = p.totalCompanies > 5 ? ` and ${p.totalCompanies - 5} more...` : '';
+          new maplibregl.Popup({ closeButton: true, closeOnClick: true })
+            .setLngLat(coords as [number, number])
+            .setHTML(
+              `<div style="padding:10px;min-width:200px">
+                <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+                  <span style="width:10px;height:10px;border-radius:3px;background:${p.color}"></span>
+                  <strong style="font-size:13px">${p.categoryName}</strong>
+                </div>
+                <div style="font-size:12px;color:#666">
+                  <p><b>Companies:</b> ${p.totalCompanies}</p>
+                  <p style="margin-top:4px">${p.companyNames}${more}</p>
+                </div>
+              </div>`,
+            )
+            .addTo(m);
+        });
+        m.on('mouseenter', `hexbin-${slug}`, () => { m.getCanvas().style.cursor = 'pointer'; });
+        m.on('mouseleave', `hexbin-${slug}`, () => { m.getCanvas().style.cursor = ''; });
       });
+    } else {
+      // ── Cluster mode ──
+      categoryMap.forEach((info, slug) => {
+        const catCompanies = companies.filter((c) =>
+          c.categories.some((cat) => cat.slug === slug),
+        );
+        if (catCompanies.length === 0) return;
 
-      // Count labels
-      m.addLayer({
-        id: `hexbin-label-${slug}`,
-        type: 'symbol',
-        source: sourceId,
-        layout: {
-          'text-field': ['get', 'count'],
-          'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
-          'text-size': 11,
-        },
-        paint: { 'text-color': '#ffffff' },
-      });
+        const sourceId = `companies-${slug}`;
+        m.addSource(sourceId, {
+          type: 'geojson',
+          data: {
+            type: 'FeatureCollection',
+            features: catCompanies.map((c) => ({
+              type: 'Feature' as const,
+              geometry: { type: 'Point' as const, coordinates: [c.longitude, c.latitude] },
+              properties: {
+                name: c.business_name, address: c.address,
+                categoryName: info.name, color: info.color,
+              },
+            })),
+          },
+          cluster: true,
+          clusterMaxZoom: 14,
+          clusterRadius: 50,
+        });
 
-      // Click → popup
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      m.on('click', `hexbin-${slug}`, (e: any) => {
-        if (!e.features?.[0]) return;
-        const coords = (e.features[0].geometry as GeoJSON.Point).coordinates.slice();
-        const p = e.features[0].properties;
-        const more =
-          p.totalCompanies > 5 ? ` and ${p.totalCompanies - 5} more...` : '';
-        new maplibregl.Popup({ closeButton: true, closeOnClick: true })
-          .setLngLat(coords as [number, number])
-          .setHTML(
-            `<div style="padding:10px;min-width:200px">
-              <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
-                <span style="width:10px;height:10px;border-radius:3px;background:${p.color}"></span>
-                <strong style="font-size:13px">${p.categoryName}</strong>
-              </div>
-              <div style="font-size:12px;color:#666">
-                <p><b>Companies:</b> ${p.totalCompanies}</p>
-                <p style="margin-top:4px">${p.companyNames}${more}</p>
-              </div>
-            </div>`,
-          )
-          .addTo(m);
-      });
+        m.addLayer({
+          id: `cluster-${slug}`, type: 'circle', source: sourceId,
+          filter: ['has', 'point_count'],
+          paint: {
+            'circle-color': info.color,
+            'circle-radius': ['step', ['get', 'point_count'], 15, 10, 20, 50, 25, 100, 30, 500, 40],
+            'circle-opacity': 0.8, 'circle-stroke-width': 2, 'circle-stroke-color': '#ffffff',
+          },
+        });
+        m.addLayer({
+          id: `cluster-count-${slug}`, type: 'symbol', source: sourceId,
+          filter: ['has', 'point_count'],
+          layout: {
+            'text-field': '{point_count_abbreviated}',
+            'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'], 'text-size': 12,
+          },
+          paint: { 'text-color': '#ffffff' },
+        });
+        m.addLayer({
+          id: `unclustered-${slug}`, type: 'circle', source: sourceId,
+          filter: ['!', ['has', 'point_count']],
+          paint: {
+            'circle-color': info.color, 'circle-radius': 8,
+            'circle-opacity': 0.9, 'circle-stroke-width': 2, 'circle-stroke-color': '#ffffff',
+          },
+        });
 
-      // Cursor
-      m.on('mouseenter', `hexbin-${slug}`, () => {
-        m.getCanvas().style.cursor = 'pointer';
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        m.on('click', `cluster-${slug}`, async (e: any) => {
+          if (!e.features?.[0]) return;
+          const source = m.getSource(sourceId);
+          if (!source) return;
+          try {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const zoom = await (source as any).getClusterExpansionZoom(e.features[0].properties.cluster_id);
+            m.easeTo({ center: e.features[0].geometry.coordinates as [number, number], zoom });
+          } catch { /* ignore */ }
+        });
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        m.on('click', `unclustered-${slug}`, (e: any) => {
+          if (!e.features?.[0]) return;
+          const coords = e.features[0].geometry.coordinates.slice();
+          const p = e.features[0].properties;
+          new maplibregl.Popup({ closeButton: true, closeOnClick: true })
+            .setLngLat(coords as [number, number])
+            .setHTML(
+              `<div style="padding:10px;min-width:200px">
+                <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+                  <span style="width:10px;height:10px;border-radius:3px;background:${p.color}"></span>
+                  <strong style="font-size:13px">${p.name}</strong>
+                </div>
+                <div style="font-size:12px;color:#666">
+                  <p><b>Category:</b> ${p.categoryName}</p>
+                  ${p.address ? `<p><b>Address:</b> ${p.address}</p>` : ''}
+                </div>
+              </div>`,
+            )
+            .addTo(m);
+        });
+
+        for (const layerId of [`cluster-${slug}`, `unclustered-${slug}`]) {
+          m.on('mouseenter', layerId, () => { m.getCanvas().style.cursor = 'pointer'; });
+          m.on('mouseleave', layerId, () => { m.getCanvas().style.cursor = ''; });
+        }
       });
-      m.on('mouseleave', `hexbin-${slug}`, () => {
-        m.getCanvas().style.cursor = '';
-      });
-    });
-  }, [companies, selectedCategories, mapLoaded]);
+    }
+  }, [companies, selectedCategories, mapLoaded, hexbin, cleanLayers]);
 
   useEffect(() => {
     const t = setTimeout(updateLayers, 100);
@@ -362,6 +461,7 @@ function AboutModal({ open, onClose }: { open: boolean; onClose: () => void }) {
 export function AthensPage() {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [includeSecondary, setIncludeSecondary] = useState(true);
+  const [hexbin, setHexbin] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
 
   const companiesQuery = useQuery({
@@ -458,6 +558,24 @@ export function AthensPage() {
               </label>
             </div>
 
+            {/* Hexbin toggle */}
+            <div className="border border-border rounded-lg p-4">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={hexbin}
+                  onChange={(e) => setHexbin(e.target.checked)}
+                  className="h-4 w-4 mt-0.5 rounded border-gray-300"
+                />
+                <div>
+                  <span className="text-sm font-medium">Hexagonal binning</span>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Aggregate companies into ~500m hexagonal cells
+                  </p>
+                </div>
+              </label>
+            </div>
+
             {(selectedCategories.length > 0 || includeSecondary) && (
               <button
                 onClick={() => {
@@ -471,11 +589,11 @@ export function AthensPage() {
             )}
 
             <div className="text-xs text-muted-foreground p-2 bg-gray-50 rounded">
-              <p className="font-medium mb-0.5">Configuration:</p>
+              <p className="font-medium mb-0.5">How to use:</p>
               <ul>
-                <li>Min: 5 companies/hexbin</li>
-                <li>Radius: {ATHENS_CONFIG.hexbinRadius}m</li>
-                <li>Size: sqrt(count) scaling</li>
+                <li>Click {hexbin ? 'hexbins' : 'clusters'} to {hexbin ? 'see details' : 'zoom in'}</li>
+                <li>Click points to see details</li>
+                {hexbin && <li>Min: 5 companies/hexbin, {ATHENS_CONFIG.hexbinRadius}m radius</li>}
               </ul>
             </div>
           </div>
@@ -487,6 +605,7 @@ export function AthensPage() {
             companies={companies}
             selectedCategories={selectedCategories}
             loading={companiesQuery.isLoading}
+            hexbin={hexbin}
           />
         </div>
       </div>
