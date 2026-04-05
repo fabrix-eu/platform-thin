@@ -61,6 +61,10 @@ import { AdminUsersPage } from '../routes/admin/users';
 import { AdminCommunitiesPage } from '../routes/admin/communities';
 import { AdminFeedbacksPage } from '../routes/admin/feedbacks';
 import { NotificationsPage } from '../routes/notifications';
+import { DataLayout } from '../routes/data/layout';
+import { RotterdamPage } from '../routes/data/rotterdam';
+import { RotterdamChartsPage } from '../routes/data/rotterdam-charts';
+import { AthensPage } from '../routes/data/athens';
 import { isAuthenticated, getMe, type User } from './auth';
 import { queryClient } from './queryClient';
 
@@ -312,6 +316,40 @@ const communityShowRoute = createRoute({
   getParentRoute: () => communitiesRoute,
   path: '/$id',
   component: CommunityShowPage,
+});
+
+// ── Data (under Explorer) ────────────────────────────────────
+
+const dataRoute = createRoute({
+  getParentRoute: () => explorerRoute,
+  path: '/data',
+  component: DataLayout,
+});
+
+const dataIndexRoute = createRoute({
+  getParentRoute: () => dataRoute,
+  path: '/',
+  beforeLoad: () => {
+    throw redirect({ to: '/data/rotterdam' });
+  },
+});
+
+const dataRotterdamRoute = createRoute({
+  getParentRoute: () => dataRoute,
+  path: '/rotterdam',
+  component: RotterdamPage,
+});
+
+const dataRotterdamChartsRoute = createRoute({
+  getParentRoute: () => dataRoute,
+  path: '/rotterdam/charts',
+  component: RotterdamChartsPage,
+});
+
+const dataAthensRoute = createRoute({
+  getParentRoute: () => dataRoute,
+  path: '/athens',
+  component: AthensPage,
 });
 
 // ── Shell B: Mon Organisation (/$orgSlug) ────────────────────
@@ -581,6 +619,12 @@ const routeTree = rootRoute.addChildren([
       communitiesIndexRoute,
       communityNewRoute,
       communityShowRoute,
+    ]),
+    dataRoute.addChildren([
+      dataIndexRoute,
+      dataRotterdamRoute,
+      dataRotterdamChartsRoute,
+      dataAthensRoute,
     ]),
   ]),
   orgRoute.addChildren([

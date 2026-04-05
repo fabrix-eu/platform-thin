@@ -7,6 +7,7 @@ const navItems = [
   { label: 'Directory', to: '/organizations' as const, exact: false },
   { label: 'Map', to: '/map' as const, exact: false },
   { label: 'Communities', to: '/communities' as const, exact: false },
+  { label: 'Data', to: '/data' as const, exact: false },
 ];
 
 export function ExplorerLayout() {
