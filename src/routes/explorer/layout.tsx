@@ -2,12 +2,15 @@ import { Link, Outlet } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { getMe } from '../../lib/auth';
 
-const navItems = [
+const userItems = [
   { label: 'Home', to: '/' as const, exact: true },
+  { label: 'Messages', to: '/messages' as const, exact: false },
+];
+
+const exploreItems = [
   { label: 'Directory', to: '/organizations' as const, exact: false },
   { label: 'Map', to: '/map' as const, exact: false },
   { label: 'Communities', to: '/communities' as const, exact: false },
-  { label: 'Messages', to: '/messages' as const, exact: false },
   { label: 'Data', to: '/data' as const, exact: false },
 ];
 
@@ -23,7 +26,7 @@ export function ExplorerLayout() {
       <aside className="w-64 border-r border-border bg-white flex-shrink-0">
         <nav className="p-2">
           <ul className="space-y-0.5">
-            {navItems.map((item) => (
+            {userItems.map((item) => (
               <li key={item.to}>
                 <Link
                   to={item.to}
@@ -39,6 +42,29 @@ export function ExplorerLayout() {
               </li>
             ))}
           </ul>
+
+          <div className="mt-4 pt-4 border-t border-border">
+            <div className="px-3 mb-2 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
+              Explore
+            </div>
+            <ul className="space-y-0.5">
+              {exploreItems.map((item) => (
+                <li key={item.to}>
+                  <Link
+                    to={item.to}
+                    activeOptions={{ exact: item.exact }}
+                    className="block px-3 py-2 text-sm rounded-md transition-colors text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                    activeProps={{
+                      className:
+                        'block px-3 py-2 text-sm rounded-md transition-colors bg-gray-100 text-gray-900 font-medium',
+                    }}
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
         </nav>
       </aside>
 
