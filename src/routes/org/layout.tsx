@@ -24,6 +24,7 @@ export function OrgLayout() {
   const isRelations = useMatch({ from: '/$orgSlug/relations', shouldThrow: false });
   const isAssessments = useMatch({ from: '/$orgSlug/assessments', shouldThrow: false });
   const isCommunities = useMatch({ from: '/$orgSlug/communities', shouldThrow: false });
+  const isMessages = useMatch({ from: '/$orgSlug/messages', shouldThrow: false });
   const isSettingsMembers = useMatch({ from: '/$orgSlug/settings/members', shouldThrow: false });
   const isSettings = !!isSettingsMembers;
 
@@ -33,6 +34,7 @@ export function OrgLayout() {
     { key: 'relations', label: 'Relations', href: `/${orgSlug}/relations` },
     { key: 'assessments', label: 'Assessments', href: `/${orgSlug}/assessments` },
     { key: 'communities', label: 'Communities', href: `/${orgSlug}/communities` },
+    { key: 'messages', label: 'Messages', href: `/${orgSlug}/messages` },
   ];
 
   const activeMap: Record<string, boolean> = {
@@ -41,6 +43,7 @@ export function OrgLayout() {
     relations: !!isRelations,
     assessments: !!isAssessments,
     communities: !!isCommunities,
+    messages: !!isMessages,
   };
 
   return (

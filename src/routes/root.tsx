@@ -4,6 +4,7 @@ import { getMe, logout } from '../lib/auth';
 import { OrgSwitcher } from '../components/OrgSwitcher';
 import { UserMenu } from '../components/UserMenu';
 import { NotificationBell } from '../components/NotificationBell';
+import { MessageBell } from '../components/MessageBell';
 import { useRefreshOnNavigate } from '../lib/notifications';
 
 export function RootLayout() {
@@ -54,6 +55,7 @@ export function RootLayout() {
               Feedback
             </Link>
           )}
+          {authed && <MessageBell />}
           {authed && <NotificationBell />}
           {authed && <UserMenu user={me.data} onLogout={handleLogout} />}
         </div>

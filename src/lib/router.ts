@@ -63,6 +63,8 @@ import { AdminFeedbacksPage } from '../routes/admin/feedbacks';
 import { NotificationsPage } from '../routes/notifications';
 import { SettingsPage } from '../routes/settings';
 import { NotificationPreferencesPage } from '../routes/notification-preferences';
+import { MessagesPage } from '../routes/messages';
+import { OrgMessagesPage } from '../routes/org/messages';
 import { DataLayout } from '../routes/data/layout';
 import { RotterdamPage } from '../routes/data/rotterdam';
 import { RotterdamChartsPage } from '../routes/data/rotterdam-charts';
@@ -254,6 +256,16 @@ const notificationPreferencesRoute = createRoute({
   component: NotificationPreferencesPage,
 });
 
+const messagesRoute = createRoute({
+  getParentRoute: () => explorerRoute,
+  path: '/messages',
+  beforeLoad: requireAuth,
+  validateSearch: z.object({
+    selected: z.string().optional(),
+  }),
+  component: MessagesPage,
+});
+
 // ── Shell A: Explorer ────────────────────────────────────────
 
 const explorerRoute = createRoute({
@@ -429,6 +441,12 @@ const orgAssessmentResultsRoute = createRoute({
   getParentRoute: () => orgRoute,
   path: '/assessments/$formId/results',
   component: AssessmentResultsPage,
+});
+
+const orgMessagesRoute = createRoute({
+  getParentRoute: () => orgRoute,
+  path: '/messages',
+  component: OrgMessagesPage,
 });
 
 const orgCommunitiesRoute = createRoute({
@@ -641,6 +659,7 @@ const routeTree = rootRoute.addChildren([
       communityNewRoute,
       communityShowRoute,
     ]),
+    messagesRoute,
     dataRoute.addChildren([
       dataIndexRoute,
       dataRotterdamRoute,
@@ -656,6 +675,7 @@ const routeTree = rootRoute.addChildren([
     orgAssessmentsRoute,
     orgAssessmentResultsRoute,
     orgAssessmentFormRoute,
+    orgMessagesRoute,
     orgCommunitiesRoute,
     orgSettingsRoute.addChildren([
       orgSettingsIndexRoute,

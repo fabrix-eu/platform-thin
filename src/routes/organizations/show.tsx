@@ -498,9 +498,14 @@ export function OrganizationShowPage() {
                   Contact
                 </button>
               )}
-              <button className="border border-gray-300 rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
-                Message
-              </button>
+              {isLoggedIn && !isMember && (
+                <Link
+                  to="/messages"
+                  className="border border-gray-300 rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  Message
+                </Link>
+              )}
               <AdminMenu
                 orgSlug={org.slug}
                 onDelete={() => deleteMutation.mutate()}

@@ -221,8 +221,7 @@ export function getNotificationUrl(n: Notification, me: User | null): string | n
 
     // ── Messages ──
     case 'message_received':
-      // TODO: navigate to conversation when route exists
-      return null;
+      return m.conversation_id ? `/messages?selected=${m.conversation_id}` : '/messages';
 
     default:
       return null;
