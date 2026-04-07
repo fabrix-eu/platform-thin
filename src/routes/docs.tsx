@@ -17,7 +17,9 @@ type Section =
   | 'community-events'
   | 'community-challenges'
   | 'community-matchmaking'
-  | 'notifications';
+  | 'notifications'
+  | 'personal-messages'
+  | 'org-messages';
 
 interface NavGroup {
   title: string;
@@ -36,6 +38,7 @@ const NAV: NavGroup[] = [
       { key: 'directory', label: 'Directory' },
       { key: 'map', label: 'Interactive Map' },
       { key: 'notifications', label: 'Notifications' },
+      { key: 'personal-messages', label: 'Personal Messages' },
     ],
   },
   {
@@ -46,6 +49,7 @@ const NAV: NavGroup[] = [
       { key: 'org-relations', label: 'Relations' },
       { key: 'org-assessments', label: 'Impact Compass' },
       { key: 'org-settings', label: 'Settings & Members' },
+      { key: 'org-messages', label: 'Messages' },
     ],
   },
   {
@@ -317,6 +321,124 @@ function NotificationsContent() {
           <li>New members joining your community</li>
         </ul>
       </Feature>
+    </div>
+  );
+}
+
+function PersonalMessagesContent() {
+  return (
+    <div>
+      <SectionTitle>Personal Messages</SectionTitle>
+      <P>
+        Personal messages let you have private, one-on-one conversations with
+        other users on Fabrix — outside of any organization context.
+      </P>
+
+      <Feature title="Accessing your personal messages">
+        Click the envelope icon in the top navigation bar. A dropdown appears
+        with two tabs: <strong>Personal</strong> and <strong>Organization</strong>.
+        The Personal tab shows your direct user-to-user conversations. Click
+        &ldquo;See all personal messages&rdquo; to open the full messaging page,
+        or click any conversation to jump directly into it.
+      </Feature>
+
+      <Feature title="Messages page">
+        The personal messages page is accessible from the Explorer sidebar under
+        &ldquo;Messages&rdquo;. It displays a conversation list on the left and
+        the selected conversation on the right.
+        <ul className="list-disc list-inside mt-1.5 space-y-1">
+          <li>
+            <strong>Conversation list</strong> — shows the name of the other
+            person, a preview of the last message, and a timestamp. Unread
+            conversations are highlighted with a dot.
+          </li>
+          <li>
+            <strong>Conversation view</strong> — displays the full message
+            history. Your messages appear on the right (purple), the other
+            person&apos;s on the left (gray).
+          </li>
+        </ul>
+      </Feature>
+
+      <Feature title="Sending a message">
+        Type your message in the input area at the bottom of the conversation
+        and press <strong>Enter</strong> to send (or click the Send button).
+        Use <strong>Shift + Enter</strong> to insert a new line without sending.
+      </Feature>
+
+      <Feature title="Unread badge">
+        The envelope icon in the navigation bar shows a red badge with the total
+        number of unread conversations (personal + organization). Inside the
+        dropdown, each tab shows its own unread count so you can quickly see
+        where new messages are.
+      </Feature>
+
+      <Tip>
+        Personal messages are separate from organization messages. If you need
+        to contact an organization (not a specific person), use the organization
+        messaging feature instead.
+      </Tip>
+    </div>
+  );
+}
+
+function OrgMessagesContent() {
+  return (
+    <div>
+      <SectionTitle>Organization Messages</SectionTitle>
+      <P>
+        Organization messages allow users to contact an organization directly.
+        All members of the organization can see and reply to these conversations
+        on behalf of the organization.
+      </P>
+
+      <Feature title="How it works">
+        When someone contacts your organization, a conversation is created
+        between that user and your organization. Every member of the
+        organization has access to the conversation and can reply. Replies are
+        sent as the organization, not as the individual member.
+      </Feature>
+
+      <Feature title="Accessing organization messages">
+        There are two ways to access your organization&apos;s messages:
+        <ul className="list-disc list-inside mt-1.5 space-y-1">
+          <li>
+            Click the envelope icon in the navigation bar and select the
+            <strong> Organization</strong> tab. Click a conversation or
+            &ldquo;See all organization messages&rdquo;.
+          </li>
+          <li>
+            From your organization sidebar, click <strong>Messages</strong>.
+            This opens the full organization messaging page.
+          </li>
+        </ul>
+      </Feature>
+
+      <Feature title="Organization messages page">
+        The layout is the same as personal messages: a conversation list on the
+        left and the selected conversation on the right. The difference is that
+        only conversations involving your organization are shown, and your
+        replies are sent as the organization.
+      </Feature>
+
+      <Feature title="Contacting an organization">
+        To start a conversation with an organization, visit their public profile
+        in the directory and click the <strong>Message</strong> button. This
+        opens a conversation in your personal messages inbox, addressed to
+        that organization.
+      </Feature>
+
+      <Feature title="Notifications">
+        When a new message is received in an organization conversation, all
+        members of the organization are notified. Click the notification to
+        jump directly to the conversation.
+      </Feature>
+
+      <Tip>
+        Organization messages are ideal for business inquiries, partnership
+        requests, or any communication that should be visible to the whole team
+        — not just one person.
+      </Tip>
     </div>
   );
 }
@@ -691,6 +813,8 @@ const CONTENT: Record<Section, () => React.ReactNode> = {
   directory: DirectoryContent,
   map: MapContent,
   notifications: NotificationsContent,
+  'personal-messages': PersonalMessagesContent,
+  'org-messages': OrgMessagesContent,
   'org-dashboard': OrgDashboardContent,
   'org-profile': OrgProfileContent,
   'org-relations': OrgRelationsContent,

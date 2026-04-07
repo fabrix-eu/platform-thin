@@ -72,15 +72,14 @@ export function MessageBell() {
     return () => document.removeEventListener('mousedown', handleClick);
   }, [open]);
 
-  function getOrgSlugForConversation(conv: ConversationWithLastMessage): string | null {
+  function getMyOrgForConversation(conv: ConversationWithLastMessage) {
     if (!me) return null;
     // Find which of my orgs is involved in this conversation
     const orgIds = [
       conv.recipient_organization?.id,
       conv.initiator.type === 'organization' ? conv.initiator.id : null,
     ].filter(Boolean);
-    const matchedOrg = me.organizations.find((o) => orgIds.includes(o.organization_id));
-    return matchedOrg?.organization_slug ?? null;
+    return me.organizations.find((o) => orgIds.includes(o.organization_id)) ?? null;
   }
 
   function handleConversationClick(conv: ConversationWithLastMessage) {
@@ -88,9 +87,9 @@ export function MessageBell() {
     if (tab === 'personal') {
       navigate({ to: '/messages', search: { selected: conv.id } });
     } else {
-      const orgSlug = getOrgSlugForConversation(conv);
-      if (orgSlug) {
-        navigate({ to: `/${orgSlug}/messages` });
+      const matchedOrg = getMyOrgForConversation(conv);
+      if (matchedOrg) {
+        navigate({ to: `/${matchedOrg.organization_slug}/messages` });
       }
     }
   }
@@ -187,6 +186,7 @@ export function MessageBell() {
                   .map((w) => w[0])
                   .join('')
                   .toUpperCase();
+                const myOrg = tab === 'organization' ? getMyOrgForConversation(conv) : null;
 
                 return (
                   <button
@@ -213,6 +213,11 @@ export function MessageBell() {
                           </span>
                         )}
                       </div>
+                      {myOrg && (
+                        <p className="text-[11px] text-primary/70 truncate">
+                          via {myOrg.organization_name}
+                        </p>
+                      )}
                       {conv.last_message && (
                         <p className={`text-xs truncate mt-0.5 ${unread ? 'text-gray-700' : 'text-gray-400'}`}>
                           {conv.last_message.content}
