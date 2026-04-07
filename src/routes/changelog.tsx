@@ -25,6 +25,36 @@ interface Release {
 
 const RELEASES: Release[] = [
   {
+    date: 'April 7, 2026',
+    title: 'User settings & organization media',
+    items: [
+      {
+        tag: 'new',
+        text: 'User settings page — edit your name, email, password, and upload an avatar. Delete your account from the danger zone.',
+      },
+      {
+        tag: 'new',
+        text: 'Notification preferences — toggle on/off, in-app, and email for each notification type from a dedicated page.',
+      },
+      {
+        tag: 'new',
+        text: 'Inline cover & logo editing — hover over the cover image or avatar on an organization profile to upload or remove them.',
+      },
+      {
+        tag: 'new',
+        text: 'Data section — explore Rotterdam and Athens industrial data on interactive maps with NACE category filters, year selection, and hexagonal binning toggle.',
+      },
+      {
+        tag: 'new',
+        text: 'Rotterdam charts — companies and jobs evolution over time with line charts.',
+      },
+      {
+        tag: 'improved',
+        text: 'Organization profile now shows "Back to profile" when navigating from your own org, instead of always "Back to list".',
+      },
+    ],
+  },
+  {
     date: 'April 3, 2026',
     title: 'Challenges & community improvements',
     items: [
