@@ -222,17 +222,45 @@ export function MessageBell() {
             )}
           </div>
 
-          {/* Footer — only for personal tab */}
-          {tab === 'personal' && (
-            <div className="border-t border-border">
+          {/* Footer */}
+          <div className="border-t border-border">
+            {tab === 'personal' ? (
               <button
                 onClick={handleSeeAllPersonal}
                 className="w-full px-4 py-2.5 text-sm text-primary hover:bg-gray-50 transition-colors text-center font-medium"
               >
                 See all personal messages
               </button>
-            </div>
-          )}
+            ) : me && me.organizations.length === 1 ? (
+              <button
+                onClick={() => {
+                  setOpen(false);
+                  navigate({ to: `/${me.organizations[0].organization_slug}/messages` });
+                }}
+                className="w-full px-4 py-2.5 text-sm text-primary hover:bg-gray-50 transition-colors text-center font-medium"
+              >
+                See all organization messages
+              </button>
+            ) : me && me.organizations.length > 1 ? (
+              <div className="px-3 py-2 space-y-0.5">
+                <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider px-1 mb-1">
+                  All messages for
+                </p>
+                {me.organizations.map((o) => (
+                  <button
+                    key={o.organization_id}
+                    onClick={() => {
+                      setOpen(false);
+                      navigate({ to: `/${o.organization_slug}/messages` });
+                    }}
+                    className="w-full text-left px-2 py-1.5 text-sm text-primary hover:bg-gray-50 rounded-md transition-colors truncate"
+                  >
+                    {o.organization_name}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+          </div>
         </div>
       )}
     </div>
