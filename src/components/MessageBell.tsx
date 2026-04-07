@@ -39,12 +39,9 @@ export function MessageBell() {
 
   // Split conversations into personal vs organization
   const personalConversations = allConversations.filter((c) => {
-    if (c.initiator.type === 'user' && c.initiator.id === myUserId) {
-      return c.recipient?.type === 'user';
-    }
-    if (c.recipient?.type === 'user' && c.recipient.id === myUserId) {
-      return c.initiator.type === 'user';
-    }
+    // Personal = conversations where the user participates as themselves (not via org)
+    if (c.initiator.type === 'user' && c.initiator.id === myUserId) return true;
+    if (c.recipient?.type === 'user' && c.recipient.id === myUserId) return true;
     return false;
   });
 
@@ -94,19 +91,9 @@ export function MessageBell() {
     }
   }
 
-  function handleSeeAll() {
+  function handleSeeAllPersonal() {
     setOpen(false);
-    if (tab === 'personal') {
-      navigate({ to: '/messages' });
-    } else {
-      // Navigate to the first org's messages, or fall back to /messages
-      const firstOrgSlug = me?.organizations[0]?.organization_slug;
-      if (firstOrgSlug) {
-        navigate({ to: `/${firstOrgSlug}/messages` });
-      } else {
-        navigate({ to: '/messages' });
-      }
-    }
+    navigate({ to: '/messages' });
   }
 
   return (
@@ -235,15 +222,17 @@ export function MessageBell() {
             )}
           </div>
 
-          {/* Footer */}
-          <div className="border-t border-border">
-            <button
-              onClick={handleSeeAll}
-              className="w-full px-4 py-2.5 text-sm text-primary hover:bg-gray-50 transition-colors text-center font-medium"
-            >
-              See all {tab === 'personal' ? 'personal' : 'organization'} messages
-            </button>
-          </div>
+          {/* Footer — only for personal tab */}
+          {tab === 'personal' && (
+            <div className="border-t border-border">
+              <button
+                onClick={handleSeeAllPersonal}
+                className="w-full px-4 py-2.5 text-sm text-primary hover:bg-gray-50 transition-colors text-center font-medium"
+              >
+                See all personal messages
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
