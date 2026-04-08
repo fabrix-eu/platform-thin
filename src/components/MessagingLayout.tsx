@@ -4,12 +4,14 @@ import { getMe } from '../lib/auth';
 import {
   useConversations,
   useConversation,
+  useCreateConversation,
   useSendMessage,
   useMarkAsRead,
   getConversationDisplayName,
   type ConversationWithLastMessage,
   type Message,
 } from '../lib/conversations';
+import { getOrganization } from '../lib/organizations';
 
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -30,10 +32,13 @@ interface MessagingLayoutProps {
   replyAsOrgId?: string;
   /** Pre-select a conversation by id */
   selectedId?: string;
+  /** Open compose panel to message this org */
+  newConversationOrgId?: string;
 }
 
-export function MessagingLayout({ orgId, replyAsOrgId, selectedId }: MessagingLayoutProps) {
+export function MessagingLayout({ orgId, replyAsOrgId, selectedId, newConversationOrgId }: MessagingLayoutProps) {
   const [activeId, setActiveId] = useState<string | null>(selectedId ?? null);
+  const [composing, setComposing] = useState(!!newConversationOrgId);
   const queryClient = useQueryClient();
 
   const me = useQuery({ queryKey: ['me'], queryFn: getMe });
@@ -96,7 +101,15 @@ export function MessagingLayout({ orgId, replyAsOrgId, selectedId }: MessagingLa
 
       {/* Message area */}
       <div className="flex-1 flex flex-col bg-white">
-        {activeId ? (
+        {composing && newConversationOrgId ? (
+          <ComposePanel
+            recipientOrgId={newConversationOrgId}
+            onConversationCreated={(id) => {
+              setComposing(false);
+              setActiveId(id);
+            }}
+          />
+        ) : activeId ? (
           <ConversationView
             conversationId={activeId}
             myUserId={myUserId}
@@ -110,6 +123,80 @@ export function MessagingLayout({ orgId, replyAsOrgId, selectedId }: MessagingLa
         )}
       </div>
     </div>
+  );
+}
+
+// ── Compose panel for new conversation ──────────────────────
+
+function ComposePanel({
+  recipientOrgId,
+  onConversationCreated,
+}: {
+  recipientOrgId: string;
+  onConversationCreated: (conversationId: string) => void;
+}) {
+  const [message, setMessage] = useState('');
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const createConversation = useCreateConversation();
+
+  const orgQuery = useQuery({
+    queryKey: ['organizations', recipientOrgId],
+    queryFn: () => getOrganization(recipientOrgId),
+  });
+
+  function handleSend() {
+    const text = message.trim();
+    if (!text) return;
+    createConversation.mutate(
+      { recipient_organization_id: recipientOrgId, content: text },
+      { onSuccess: (conv) => onConversationCreated(conv.id) },
+    );
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  }
+
+  const orgName = orgQuery.data?.name ?? 'Organization';
+
+  return (
+    <>
+      <div className="px-6 py-3 border-b border-border flex items-center">
+        <h3 className="text-sm font-semibold text-gray-900">New message to {orgName}</h3>
+      </div>
+      <div className="flex-1 flex items-center justify-center px-6">
+        <p className="text-sm text-gray-400">Write your first message to start the conversation.</p>
+      </div>
+      <div className="px-6 py-3 border-t border-border">
+        {createConversation.isError && (
+          <p className="text-sm text-red-600 mb-2">
+            {(createConversation.error as Error)?.message || 'Failed to send message'}
+          </p>
+        )}
+        <div className="flex items-end gap-2">
+          <textarea
+            ref={textareaRef}
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder={`Message ${orgName}...`}
+            rows={2}
+            autoFocus
+            className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+          <button
+            onClick={handleSend}
+            disabled={!message.trim() || createConversation.isPending}
+            className="bg-primary text-primary-foreground rounded-lg px-4 py-2 text-sm font-medium hover:bg-primary/90 disabled:opacity-50"
+          >
+            {createConversation.isPending ? 'Sending...' : 'Send'}
+          </button>
+        </div>
+      </div>
+    </>
   );
 }
 

@@ -487,9 +487,10 @@ export function OrganizationShowPage() {
               {org.claimed && isLoggedIn && !isMember && (
                 <JoinRequestButton orgId={org.id} />
               )}
-              {isLoggedIn && !isMember && (
+              {isLoggedIn && !isMember && org.claimed && (
                 <Link
                   to="/messages"
+                  search={{ to: org.id }}
                   className="bg-primary text-primary-foreground rounded-lg px-4 py-2 text-sm font-medium hover:bg-primary/90 transition-colors"
                 >
                   Send message

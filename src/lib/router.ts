@@ -271,6 +271,7 @@ const messagesRoute = createRoute({
   beforeLoad: requireAuth,
   validateSearch: z.object({
     selected: z.string().optional(),
+    to: z.string().optional(),
   }),
   component: MessagesPage,
 });
