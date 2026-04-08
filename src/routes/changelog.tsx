@@ -25,6 +25,44 @@ interface Release {
 
 const RELEASES: Release[] = [
   {
+    date: 'April 8, 2026',
+    title: 'Marketplace & messaging',
+    items: [
+      {
+        tag: 'new',
+        text: 'Marketplace — browse, create, edit, and delete listings. Filter by type (offer/demand), category, and subcategory. Paginated grid with thumbnail cards.',
+      },
+      {
+        tag: 'new',
+        text: 'Listing detail page — image gallery with thumbnail strip, organization card, quantity & expiry info, and contact button.',
+      },
+      {
+        tag: 'new',
+        text: 'Multi-image upload — attach multiple photos to a listing via direct S3 upload with drag-and-drop reordering.',
+      },
+      {
+        tag: 'new',
+        text: 'Community marketplace — browse listings scoped to community members, with the same filters and search as the global marketplace.',
+      },
+      {
+        tag: 'new',
+        text: 'Subcategories — 30+ subcategories covering the full textile circular value chain: fibers, spinning, weaving, dyeing, cutting, recycling, logistics, and more.',
+      },
+      {
+        tag: 'new',
+        text: 'Messaging — send and receive messages between organizations. Message bell in the header with Personal and Organization tabs.',
+      },
+      {
+        tag: 'new',
+        text: 'Personal messages page — view and reply to your direct messages with real-time conversation threads.',
+      },
+      {
+        tag: 'new',
+        text: 'Organization messages page — manage messages on behalf of your organization, accessible from the org sidebar.',
+      },
+    ],
+  },
+  {
     date: 'April 7, 2026',
     title: 'User settings & organization media',
     items: [
