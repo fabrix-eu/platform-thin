@@ -28,6 +28,7 @@ export function CommunityLayout() {
     { key: 'members', label: 'Members', path: `${basePath}/members` },
     { key: 'events', label: 'Events', path: `${basePath}/events` },
     { key: 'challenges', label: 'Challenges', path: `${basePath}/challenges` },
+    { key: 'marketplace', label: 'Marketplace', path: `${basePath}/marketplace` },
     { key: 'matchmaking', label: 'Matchmaking', path: `${basePath}/matchmaking` },
     ...(isAdmin ? [
       { key: 'join-requests', label: 'Join Requests', path: `${basePath}/join-requests` },

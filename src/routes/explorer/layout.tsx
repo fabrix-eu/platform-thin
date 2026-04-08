@@ -11,6 +11,7 @@ const exploreItems = [
   { label: 'Directory', to: '/organizations' as const, exact: false },
   { label: 'Map', to: '/map' as const, exact: false },
   { label: 'Communities', to: '/communities' as const, exact: false },
+  { label: 'Marketplace', to: '/marketplace' as const, exact: false },
   { label: 'City Data', to: '/data' as const, exact: false },
 ];
 

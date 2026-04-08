@@ -69,6 +69,12 @@ import { DataLayout } from '../routes/data/layout';
 import { RotterdamPage } from '../routes/data/rotterdam';
 import { RotterdamChartsPage } from '../routes/data/rotterdam-charts';
 import { AthensPage } from '../routes/data/athens';
+import { MarketplaceListPage } from '../routes/marketplace/list';
+import { MarketplaceShowPage } from '../routes/marketplace/show';
+import { MarketplaceNewPage } from '../routes/marketplace/new';
+import { MarketplaceEditPage } from '../routes/marketplace/edit';
+import { CommunityMarketplacePage } from '../routes/community/marketplace';
+import { CommunityMarketplaceDetailPage } from '../routes/community/marketplace-detail';
 import { isAuthenticated, getMe, type User } from './auth';
 import { queryClient } from './queryClient';
 
@@ -383,6 +389,46 @@ const dataAthensRoute = createRoute({
   component: AthensPage,
 });
 
+// ── Marketplace (under Explorer) ─────────────────────────────
+
+const marketplaceRoute = createRoute({
+  getParentRoute: () => explorerRoute,
+  path: '/marketplace',
+});
+
+const marketplaceIndexRoute = createRoute({
+  getParentRoute: () => marketplaceRoute,
+  path: '/',
+  validateSearch: z.object({
+    page: z.number().optional(),
+    search: z.string().optional(),
+    by_type: z.string().optional(),
+    by_category: z.string().optional(),
+    by_subcategory: z.string().optional(),
+  }),
+  component: MarketplaceListPage,
+});
+
+const marketplaceNewRoute = createRoute({
+  getParentRoute: () => marketplaceRoute,
+  path: '/new',
+  beforeLoad: requireAuth,
+  component: MarketplaceNewPage,
+});
+
+const marketplaceShowRoute = createRoute({
+  getParentRoute: () => marketplaceRoute,
+  path: '/$id',
+  component: MarketplaceShowPage,
+});
+
+const marketplaceEditRoute = createRoute({
+  getParentRoute: () => marketplaceRoute,
+  path: '/$id/edit',
+  beforeLoad: requireAuth,
+  component: MarketplaceEditPage,
+});
+
 // ── Shell B: Mon Organisation (/$orgSlug) ────────────────────
 
 const orgRoute = createRoute({
@@ -577,6 +623,25 @@ const communitySettingsRoute = createRoute({
   component: CommunitySettingsPage,
 });
 
+const communityMarketplaceRoute = createRoute({
+  getParentRoute: () => communityRoute,
+  path: '/marketplace',
+  validateSearch: z.object({
+    page: z.number().optional(),
+    search: z.string().optional(),
+    by_type: z.string().optional(),
+    by_category: z.string().optional(),
+    by_subcategory: z.string().optional(),
+  }),
+  component: CommunityMarketplacePage,
+});
+
+const communityMarketplaceDetailRoute = createRoute({
+  getParentRoute: () => communityRoute,
+  path: '/marketplace/$listingId',
+  component: CommunityMarketplaceDetailPage,
+});
+
 // ── Admin ────────────────────────────────────────────────────
 
 const adminRoute = createRoute({
@@ -660,6 +725,12 @@ const routeTree = rootRoute.addChildren([
       communityShowRoute,
     ]),
     messagesRoute,
+    marketplaceRoute.addChildren([
+      marketplaceIndexRoute,
+      marketplaceNewRoute,
+      marketplaceShowRoute,
+      marketplaceEditRoute,
+    ]),
     dataRoute.addChildren([
       dataIndexRoute,
       dataRotterdamRoute,
@@ -696,6 +767,8 @@ const routeTree = rootRoute.addChildren([
       communityMatchmakingRoute,
       communityJoinRequestsRoute,
       communitySettingsRoute,
+      communityMarketplaceRoute,
+      communityMarketplaceDetailRoute,
     ]),
   ]),
 ]);
