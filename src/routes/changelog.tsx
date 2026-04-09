@@ -446,7 +446,7 @@ const RELEASES: Release[] = [
     items: [
       {
         tag: 'new',
-        text: 'Initial release of platform-thin — the new Fabrix frontend.',
+        text: 'Initial release of platform-front — the new Fabrix frontend.',
       },
       {
         tag: 'new',
