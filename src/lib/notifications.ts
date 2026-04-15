@@ -219,10 +219,6 @@ export function getNotificationUrl(n: Notification, me: User | null): string | n
     case 'nearby_organization_created':
       return n.notifiable?.id ? `/organizations/${n.notifiable.id}` : null;
 
-    // ── Messages ──
-    case 'message_received':
-      return m.conversation_id ? `/messages?selected=${m.conversation_id}` : '/messages';
-
     default:
       return null;
   }

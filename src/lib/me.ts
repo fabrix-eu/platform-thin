@@ -38,7 +38,6 @@ export const NOTIFICATION_TYPE_LABELS: Record<string, string> = {
   organization_member_joined: 'New member joined organization',
   organization_claimed: 'Organization claimed',
   organization_joined_community: 'Organization joined your community',
-  message_received: 'Message received',
   join_request_received: 'Join request received',
   join_request_accepted: 'Join request accepted',
   join_request_declined: 'Join request declined',
