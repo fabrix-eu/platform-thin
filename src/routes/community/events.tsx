@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Link, useParams } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
-import { getMe } from '../../lib/auth';
 import { getCommunityEvents } from '../../lib/community-events';
 import type { CommunityEvent } from '../../lib/community-events';
 
@@ -93,11 +92,6 @@ export function CommunityEventsListPage() {
 
   const [tab, setTab] = useState<Tab>('upcoming');
 
-  const me = useQuery({ queryKey: ['me'], queryFn: getMe });
-  const isAdmin = me.data?.accessible_communities?.some(
-    (c) => c.slug === communitySlug && c.is_admin,
-  ) ?? false;
-
   const eventsQuery = useQuery({
     queryKey: ['community_events', communitySlug],
     queryFn: () => getCommunityEvents(communitySlug, { per_page: 50 }),
@@ -121,15 +115,13 @@ export function CommunityEventsListPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-lg font-display font-bold text-gray-900">Events</h2>
-        {isAdmin && (
-          <Link
-            to="/$orgSlug/communities/$communitySlug/events/new"
-            params={{ orgSlug, communitySlug }}
-            className="bg-primary text-primary-foreground rounded-lg px-4 py-2 text-sm font-medium hover:bg-primary/90 transition-colors"
-          >
-            Create event
-          </Link>
-        )}
+        <Link
+          to="/$orgSlug/communities/$communitySlug/events/new"
+          params={{ orgSlug, communitySlug }}
+          className="bg-primary text-primary-foreground rounded-lg px-4 py-2 text-sm font-medium hover:bg-primary/90 transition-colors"
+        >
+          Create event
+        </Link>
       </div>
 
       {/* Tabs */}
