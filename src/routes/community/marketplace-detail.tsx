@@ -206,6 +206,7 @@ export function CommunityMarketplaceDetailPage() {
       {!isOwner && me.data && (
         <Link
           to="/messages"
+          search={{ to: listing.organization.id, listing: listing.id }}
           className="block w-full text-center bg-primary text-primary-foreground rounded-lg px-4 py-3 text-sm font-medium hover:bg-primary/90 transition-colors"
         >
           Contact {listing.organization.name}

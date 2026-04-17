@@ -12,6 +12,7 @@ import {
   type Message,
 } from '../lib/conversations';
 import { getOrganization } from '../lib/organizations';
+import { getListing, LISTING_TYPES, LISTING_CATEGORIES } from '../lib/listings';
 
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -30,15 +31,17 @@ interface MessagingLayoutProps {
   orgId?: string;
   /** When replying as an org member, send as this org */
   replyAsOrgId?: string;
-  /** Pre-select a conversation by id */
+  /** Pre-select a conversation by id (from URL search param) */
   selectedId?: string;
-  /** Open compose panel to message this org */
+  /** Open compose panel to message this org (from URL search param) */
   newConversationOrgId?: string;
+  /** Listing context for pre-filled message (from URL search param) */
+  listingId?: string;
+  /** Callback when a conversation is selected or created — parent updates URL */
+  onSelectConversation?: (id: string) => void;
 }
 
-export function MessagingLayout({ orgId, replyAsOrgId, selectedId, newConversationOrgId }: MessagingLayoutProps) {
-  const [activeId, setActiveId] = useState<string | null>(selectedId ?? null);
-  const [composing, setComposing] = useState(!!newConversationOrgId);
+export function MessagingLayout({ orgId, replyAsOrgId, selectedId, newConversationOrgId, listingId, onSelectConversation }: MessagingLayoutProps) {
   const queryClient = useQueryClient();
 
   const me = useQuery({ queryKey: ['me'], queryFn: getMe });
@@ -63,12 +66,25 @@ export function MessagingLayout({ orgId, replyAsOrgId, selectedId, newConversati
         return false;
       });
 
-  // Auto-select first conversation
-  useEffect(() => {
-    if (!activeId && conversations.length > 0) {
-      setActiveId(conversations[0].id);
-    }
-  }, [activeId, conversations]);
+  // When `to` is set, check if a conversation already exists with that org
+  // If so, select it instead of composing
+  const existingConversationForOrg = newConversationOrgId
+    ? allConversations.find((c) => {
+        const recipientOrgId = c.recipient_organization?.id;
+        const initiatorOrgId = c.initiator.type === 'organization' ? c.initiator.id : null;
+        return recipientOrgId === newConversationOrgId || initiatorOrgId === newConversationOrgId;
+      })
+    : null;
+
+  const composing = !!newConversationOrgId && !existingConversationForOrg;
+  const activeId = existingConversationForOrg?.id ?? selectedId ?? null;
+
+  // Auto-select first conversation when nothing is active
+  const resolvedActiveId = activeId ?? (conversations.length > 0 ? conversations[0].id : null);
+
+  function selectConversation(id: string) {
+    onSelectConversation?.(id);
+  }
 
   return (
     <div className="flex h-[calc(100vh-56px)]">
@@ -82,17 +98,17 @@ export function MessagingLayout({ orgId, replyAsOrgId, selectedId, newConversati
         <div className="flex-1 overflow-y-auto">
           {isLoading ? (
             <div className="p-4 text-sm text-gray-400">Loading...</div>
-          ) : conversations.length === 0 ? (
+          ) : conversations.length === 0 && !composing ? (
             <div className="p-4 text-sm text-gray-400">No conversations yet</div>
           ) : (
             conversations.map((conv) => (
               <ConversationRow
                 key={conv.id}
                 conversation={conv}
-                isActive={conv.id === activeId}
+                isActive={conv.id === resolvedActiveId}
                 myUserId={myUserId}
                 myOrgIds={myOrgIds}
-                onClick={() => setActiveId(conv.id)}
+                onClick={() => selectConversation(conv.id)}
               />
             ))
           )}
@@ -104,17 +120,16 @@ export function MessagingLayout({ orgId, replyAsOrgId, selectedId, newConversati
         {composing && newConversationOrgId ? (
           <ComposePanel
             recipientOrgId={newConversationOrgId}
-            onConversationCreated={(id) => {
-              setComposing(false);
-              setActiveId(id);
-            }}
+            listingId={listingId}
+            onConversationCreated={selectConversation}
           />
-        ) : activeId ? (
+        ) : resolvedActiveId ? (
           <ConversationView
-            conversationId={activeId}
+            conversationId={resolvedActiveId}
             myUserId={myUserId}
             replyAsOrgId={replyAsOrgId}
             queryClient={queryClient}
+            listingId={existingConversationForOrg ? listingId : undefined}
           />
         ) : (
           <div className="flex-1 flex items-center justify-center text-sm text-gray-400">
@@ -126,16 +141,61 @@ export function MessagingLayout({ orgId, replyAsOrgId, selectedId, newConversati
   );
 }
 
+// ── Listing context banner ─────────────────────────────────
+
+function ListingBanner({ listingId }: { listingId: string }) {
+  const { data: listing } = useQuery({
+    queryKey: ['listings', listingId],
+    queryFn: () => getListing(listingId),
+  });
+
+  if (!listing) return null;
+
+  const typeConfig = LISTING_TYPES[listing.listing_type];
+  const categoryConfig = LISTING_CATEGORIES[listing.category];
+
+  return (
+    <div className="mx-6 mt-3 p-3 bg-gray-50 border border-border rounded-lg">
+      <p className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">About listing</p>
+      <div className="flex items-center gap-2">
+        {listing.thumbnail_url && (
+          <img src={listing.thumbnail_url} alt="" className="w-10 h-10 rounded object-cover shrink-0" />
+        )}
+        <div className="min-w-0">
+          <p className="text-sm font-medium text-gray-900 truncate">{listing.title}</p>
+          <div className="flex gap-1.5 mt-0.5">
+            {typeConfig && (
+              <span className={`text-[10px] px-1.5 py-0 rounded-full font-medium ${
+                listing.listing_type === 'offer' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
+              }`}>
+                {typeConfig.label}
+              </span>
+            )}
+            {categoryConfig && (
+              <span className={`text-[10px] px-1.5 py-0 rounded-full font-medium ${categoryConfig.badgeColor}`}>
+                {categoryConfig.label}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Compose panel for new conversation ──────────────────────
 
 function ComposePanel({
   recipientOrgId,
+  listingId,
   onConversationCreated,
 }: {
   recipientOrgId: string;
+  listingId?: string;
   onConversationCreated: (conversationId: string) => void;
 }) {
   const [message, setMessage] = useState('');
+  const [prefilled, setPrefilled] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const createConversation = useCreateConversation();
 
@@ -143,6 +203,30 @@ function ComposePanel({
     queryKey: ['organizations', recipientOrgId],
     queryFn: () => getOrganization(recipientOrgId),
   });
+
+  const listingQuery = useQuery({
+    queryKey: ['listings', listingId!],
+    queryFn: () => getListing(listingId!),
+    enabled: !!listingId,
+  });
+
+  // Pre-fill message with listing context
+  useEffect(() => {
+    if (listingQuery.data && !prefilled) {
+      const listing = listingQuery.data;
+      const typeLabel = LISTING_TYPES[listing.listing_type]?.label?.toLowerCase() ?? listing.listing_type;
+      setMessage(`Hi, I'm contacting you about your ${typeLabel}: "${listing.title}"\n\n`);
+      setPrefilled(true);
+      // Move cursor to end
+      setTimeout(() => {
+        const ta = textareaRef.current;
+        if (ta) {
+          ta.focus();
+          ta.setSelectionRange(ta.value.length, ta.value.length);
+        }
+      }, 0);
+    }
+  }, [listingQuery.data, prefilled]);
 
   function handleSend() {
     const text = message.trim();
@@ -167,8 +251,11 @@ function ComposePanel({
       <div className="px-6 py-3 border-b border-border flex items-center">
         <h3 className="text-sm font-semibold text-gray-900">New message to {orgName}</h3>
       </div>
-      <div className="flex-1 flex items-center justify-center px-6">
-        <p className="text-sm text-gray-400">Write your first message to start the conversation.</p>
+      <div className="flex-1 flex flex-col items-center justify-center px-6">
+        {listingId && <ListingBanner listingId={listingId} />}
+        {!listingId && (
+          <p className="text-sm text-gray-400">Write your first message to start the conversation.</p>
+        )}
       </div>
       <div className="px-6 py-3 border-t border-border">
         {createConversation.isError && (
@@ -183,7 +270,7 @@ function ComposePanel({
             onChange={(e) => setMessage(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={`Message ${orgName}...`}
-            rows={2}
+            rows={3}
             autoFocus
             className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ring"
           />
@@ -268,18 +355,44 @@ function ConversationView({
   myUserId,
   replyAsOrgId,
   queryClient,
+  listingId,
 }: {
   conversationId: string;
   myUserId: string;
   replyAsOrgId?: string;
   queryClient: ReturnType<typeof useQueryClient>;
+  listingId?: string;
 }) {
   const { data: conversation, isLoading } = useConversation(conversationId);
   const sendMessage = useSendMessage();
   const markAsRead = useMarkAsRead();
   const [input, setInput] = useState('');
+  const [prefilled, setPrefilled] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const listingQuery = useQuery({
+    queryKey: ['listings', listingId!],
+    queryFn: () => getListing(listingId!),
+    enabled: !!listingId,
+  });
+
+  // Pre-fill input with listing context when navigating to existing conversation
+  useEffect(() => {
+    if (listingQuery.data && !prefilled) {
+      const listing = listingQuery.data;
+      const typeLabel = LISTING_TYPES[listing.listing_type]?.label?.toLowerCase() ?? listing.listing_type;
+      setInput(`Hi, I'm contacting you about your ${typeLabel}: "${listing.title}"\n\n`);
+      setPrefilled(true);
+      setTimeout(() => {
+        const ta = textareaRef.current;
+        if (ta) {
+          ta.focus();
+          ta.setSelectionRange(ta.value.length, ta.value.length);
+        }
+      }, 0);
+    }
+  }, [listingQuery.data, prefilled]);
 
   // Mark as read when opening conversation
   useEffect(() => {
@@ -292,6 +405,12 @@ function ConversationView({
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [conversation?.messages?.length]);
+
+  // Reset prefilled state when switching conversations
+  useEffect(() => {
+    setPrefilled(false);
+    setInput('');
+  }, [conversationId]);
 
   function handleSend() {
     const text = input.trim();
@@ -334,6 +453,8 @@ function ConversationView({
           <span className="ml-2 text-xs text-gray-400">Organization</span>
         )}
       </div>
+
+      {listingId && <ListingBanner listingId={listingId} />}
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">

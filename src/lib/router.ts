@@ -281,6 +281,7 @@ const messagesRoute = createRoute({
   validateSearch: z.object({
     selected: z.string().optional(),
     to: z.string().optional(),
+    listing: z.string().optional(),
   }),
   component: MessagesPage,
 });
@@ -521,6 +522,11 @@ const orgAssessmentResultsRoute = createRoute({
 const orgMessagesRoute = createRoute({
   getParentRoute: () => orgRoute,
   path: '/messages',
+  validateSearch: z.object({
+    selected: z.string().optional(),
+    to: z.string().optional(),
+    listing: z.string().optional(),
+  }),
   component: OrgMessagesPage,
 });
 
