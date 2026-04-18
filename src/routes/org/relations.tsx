@@ -8,7 +8,7 @@ import type { Relation } from '../../lib/relations';
 import { OrganizationsMap } from '../../components/OrganizationsMap';
 import type { MapRelationLine } from '../../components/OrganizationsMap';
 import { RelationLegend } from '../../components/RelationLegend';
-import { FeatureIntro } from '../../components/FeatureIntro';
+import { useFeatureInfo, FeatureIntro, FeatureInfoTrigger } from '../../components/FeatureIntro';
 
 const PER_PAGE = 12;
 
@@ -249,6 +249,7 @@ export function OrgRelationsPage() {
   const [page, setPage] = useState(1);
   const [view, setView] = useState<'list' | 'cards'>('list');
   const [showAddModal, setShowAddModal] = useState(false);
+  const relationsInfo = useFeatureInfo('relations');
 
   const org = useQuery({
     queryKey: ['organizations', orgSlug],
@@ -313,9 +314,9 @@ export function OrgRelationsPage() {
     return (
       <div className="p-6 max-w-3xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
-          <div>
+          <div className="flex items-center gap-2">
             <h1 className="text-2xl font-display font-bold text-gray-900">Relations</h1>
-            <p className="text-sm text-gray-500 mt-1">Manage your supply chain connections</p>
+            <FeatureInfoTrigger info={relationsInfo} />
           </div>
           <button
             onClick={() => setShowAddModal(true)}
@@ -328,14 +329,16 @@ export function OrgRelationsPage() {
           </button>
         </div>
         <FeatureIntro
-          icon={
-            <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
-            </svg>
-          }
-          title="Build your supply chain"
-          description="Connect with partners, suppliers, and clients to build your circular textile supply chain."
+          info={relationsInfo}
+          title="Map your supply chain"
+          description="Add your suppliers, customers, and partners to visualize your network. Public relations increase your visibility — visitors browsing a partner's profile will discover you too."
         />
+        <div className="py-12 text-center border-2 border-dashed border-gray-200 rounded-lg">
+          <svg className="mx-auto w-10 h-10 text-gray-300" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+          </svg>
+          <p className="text-sm text-gray-400 mt-2">No relations yet. Add your first partner to get started.</p>
+        </div>
         {showAddModal && (
           <AddRelationModal
             organizationId={organization.id}
@@ -351,7 +354,10 @@ export function OrgRelationsPage() {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-display font-bold text-gray-900">Relations</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-display font-bold text-gray-900">Relations</h1>
+            <FeatureInfoTrigger info={relationsInfo} />
+          </div>
           <p className="text-sm text-gray-500 mt-1">
             {relatedOrgs.length} connected organization{relatedOrgs.length !== 1 ? 's' : ''}
           </p>
@@ -366,6 +372,12 @@ export function OrgRelationsPage() {
           Add relation
         </button>
       </div>
+
+      <FeatureIntro
+        info={relationsInfo}
+        title="Map your supply chain"
+        description="Add your suppliers, customers, and partners to visualize your network. Public relations increase your visibility — visitors browsing a partner's profile will discover you too."
+      />
 
       {/* Map */}
       <div className="rounded-lg overflow-hidden border border-border relative">

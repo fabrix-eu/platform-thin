@@ -1,7 +1,6 @@
 import { Link, useParams } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { getMe } from '../../lib/auth';
-import { FeatureIntro } from '../../components/FeatureIntro';
 
 export function OrgCommunitiesListPage() {
   const { orgSlug } = useParams({ strict: false }) as { orgSlug: string };
@@ -83,25 +82,15 @@ export function OrgCommunitiesListPage() {
           })}
         </div>
       ) : (
-        (() => {
-          const role = me.data?.role === 'facilitator' || me.data?.role === 'admin' ? 'facilitator' : 'user';
-          return (
-            <FeatureIntro
-              icon={
-                <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" />
-                </svg>
-              }
-              title={role === 'facilitator' ? 'Create a community' : 'Join a community'}
-              description={
-                role === 'facilitator'
-                  ? 'Create a community to gather organizations, host events, and run challenges.'
-                  : 'Join communities to access events, challenges, and support from local facilitators.'
-              }
-              cta={role === 'user' ? { label: 'Browse communities', to: '/communities' } : undefined}
-            />
-          );
-        })()
+        <div className="py-12 text-center border-2 border-dashed border-gray-200 rounded-lg">
+          <svg className="mx-auto w-10 h-10 text-gray-300" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" />
+          </svg>
+          <p className="text-sm text-gray-400 mt-2">No communities yet.</p>
+          <Link to="/communities" className="text-sm text-primary hover:underline mt-1 inline-block">
+            Browse communities
+          </Link>
+        </div>
       )}
     </div>
   );
